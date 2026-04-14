@@ -456,10 +456,10 @@
 <body>
     <div class="page">
         <div class="header">
-            <img src="logo.png" alt="HOT" class="top-logo">
+            <img src="logo.png" alt="לוגו" class="top-logo">
             <a href="home.html" class="home-link">דף ראשי</a>
             <h1>סימולטור שיחה</h1>
-            <p>בחר תחום, רמת קושי ושם הנציג — ותתחיל שיחה עם לקוח HOT וירטואלי מבוסס AI.</p>
+            <p>בחר תחום, רמת קושי ושם הנציג — ותתחיל שיחה עם לקוח וירטואלי מבוסס AI.</p>
             <div class="status-row" id="statusBanner">
                 <span>
                     <svg id="statusIcon" class="status-dot status-idle" viewBox="0 0 24 24" aria-hidden="true">
@@ -652,7 +652,7 @@
             }
         }
 
-        // ─── Build HOT Mobile system prompt ───────────────────────────────────────
+        // ─── Build system prompt ──────────────────────────────────────────────────
         function buildSystemPrompt(scenario) {
             const genderStr = scenario.gender === 'female' ? 'נקבה' : 'זכר';
             const directionStr = loadConversationDirection() === 'outgoing' ? 'שיחה יוצאת (הסוכן התקשר אליך)' : 'שיחה נכנסת (אתה התקשרת לשירות לקוחות)';
@@ -661,7 +661,7 @@
             const lang = currentLanguage === 'en' ? 'English' : 'עברית';
 
             if (currentLanguage === 'en') {
-                return `You are a virtual HOT Mobile customer in a call-center training simulation.
+                return `You are a virtual customer in a call-center training simulation.
 
 Your character:
 - Name: ${scenario.name} (${genderStr === 'נקבה' ? 'female' : 'male'}, age ${scenario.age})
@@ -671,10 +671,10 @@ Your character:
 - Difficulty: ${diffStr}
 - Character traits: ${(scenario.traits || []).join(', ')}
 
-About HOT Mobile (what you know as a customer):
-- HOT Mobile is an Israeli mobile carrier, part of the HOT group
-- Plans available: HOT 60GB at ₪29/month, HOT Unlimited at ₪49/month, HOT Family (4 lines) at ₪129/month
-- Also offers: HOT TV, fiber optics, device financing for Apple/Samsung/Xiaomi
+About the company (what you know as a customer):
+- The company is an Israeli mobile carrier
+- Plans available: 60GB at ₪29/month, Unlimited at ₪49/month, Family (4 lines) at ₪129/month
+- Also offers: TV service, fiber optics, device financing for Apple/Samsung/Xiaomi
 - Customer service number: *1559
 
 Call type: ${directionStr}
@@ -692,7 +692,7 @@ STRICT RULES:
 9. Do NOT write "Customer:" before your response. Just speak directly.`;
             }
 
-            return `אתה לקוח/ת HOT בסימולציית אימון לנציגי שירות לקוחות.
+            return `אתה לקוח/ת בסימולציית אימון לנציגי שירות לקוחות.
 
 **הדמות שלך:**
 - שם: ${scenario.name} | מין: ${genderStr} | גיל: ${scenario.age}
@@ -702,10 +702,10 @@ STRICT RULES:
 - רמת קושי: ${diffStr}
 - תכונות אופי: ${(scenario.traits || []).join(', ')}
 
-**מה אתה יודע על HOT:**
-- HOT היא חברת הסלולר של קבוצת HOT
-- חבילות: HOT 60GB ב-29₪, HOT ללא הגבלה ב-49₪, HOT משפחה 4 קווים ב-129₪
-- שירותים נוספים: HOT TV, סיבים אופטיים, מימון מכשירים (Apple/Samsung/Xiaomi)
+**מה אתה יודע על החברה:**
+- החברה היא חברת סלולר ישראלית
+- חבילות: 60GB ב-29₪, ללא הגבלה ב-49₪, משפחה 4 קווים ב-129₪
+- שירותים נוספים: שירות טלוויזיה, סיבים אופטיים, מימון מכשירים (Apple/Samsung/Xiaomi)
 - *1559 — מספר שירות לקוחות
 
 **סוג שיחה:** ${directionStr}
@@ -2335,9 +2335,9 @@ STRICT RULES:
 
             if (currentLanguage === 'en') {
                 const situationsEn = [
-                    { main: 'interested in the HOT Unlimited plan at ₪49/month', background: 'heard about a join offer and wants to know the full terms before committing' },
-                    { main: 'interested in upgrading to iPhone 16 with HOT financing', background: 'current phone is broken and wants to check monthly payment options with HOT' },
-                    { main: 'interested in switching to HOT Mobile with number portability', background: 'is with a competitor and wants to know what HOT can offer to make the switch worthwhile' }
+                    { main: 'interested in the Unlimited plan at ₪49/month', background: 'heard about a join offer and wants to know the full terms before committing' },
+                    { main: 'interested in upgrading to iPhone 16 with carrier financing', background: 'current phone is broken and wants to check monthly payment options' },
+                    { main: 'interested in switching carriers with number portability', background: 'is with a competitor and wants to know what the company can offer to make the switch worthwhile' }
                 ];
                 const traitsPoolEn = ['nervous', 'skeptical', 'cold', 'pressed', 'smart', 'confused', 'calculating', 'indifferent'];
                 const sit = situationsEn[Math.floor(Math.random() * situationsEn.length)];
@@ -2365,22 +2365,22 @@ STRICT RULES:
 
             const situations = [
                 {
-                    mainMale: 'מתעניין בחבילת HOT ללא הגבלה ב-49₪',
-                    mainFemale: 'מתעניינת בחבילת HOT ללא הגבלה ב-49₪',
+                    mainMale: 'מתעניין בחבילה ללא הגבלה ב-49₪',
+                    mainFemale: 'מתעניינת בחבילה ללא הגבלה ב-49₪',
                     backgroundMale: 'שמע על מבצע הצטרפות ורוצה לדעת את כל התנאים לפני שמתחייב',
                     backgroundFemale: 'שמעה על מבצע הצטרפות ורוצה לדעת את כל התנאים לפני שמתחייבת'
                 },
                 {
-                    mainMale: 'מתעניין בשדרוג לאייפון 16 במימון HOT',
-                    mainFemale: 'מתעניינת בשדרוג לאייפון 16 במימון HOT',
-                    backgroundMale: 'הטלפון שלו התקלקל והוא רוצה לבדוק אפשרויות תשלום חודשי עם HOT',
-                    backgroundFemale: 'הטלפון שלה התקלקל והיא רוצה לבדוק אפשרויות תשלום חודשי עם HOT'
+                    mainMale: 'מתעניין בשדרוג לאייפון 16 במימון החברה',
+                    mainFemale: 'מתעניינת בשדרוג לאייפון 16 במימון החברה',
+                    backgroundMale: 'הטלפון שלו התקלקל והוא רוצה לבדוק אפשרויות תשלום חודשי',
+                    backgroundFemale: 'הטלפון שלה התקלקל והיא רוצה לבדוק אפשרויות תשלום חודשי'
                 },
                 {
-                    mainMale: 'מעוניין לעבור ל-HOT עם שמירת מספר',
-                    mainFemale: 'מעוניינת לעבור ל-HOT עם שמירת מספר',
-                    backgroundMale: 'כרגע בחברה מתחרה ורוצה לדעת מה HOT יכולה להציע כדי שהמעבר ישתלם',
-                    backgroundFemale: 'כרגע בחברה מתחרה ורוצה לדעת מה HOT יכולה להציע כדי שהמעבר ישתלם'
+                    mainMale: 'מעוניין לעבור לחברה עם שמירת מספר',
+                    mainFemale: 'מעוניינת לעבור לחברה עם שמירת מספר',
+                    backgroundMale: 'כרגע בחברה מתחרה ורוצה לדעת מה החברה יכולה להציע כדי שהמעבר ישתלם',
+                    backgroundFemale: 'כרגע בחברה מתחרה ורוצה לדעת מה החברה יכולה להציע כדי שהמעבר ישתלם'
                 }
             ];
             const traitsPool = ['עצבני', 'סקפטי', 'קר', 'לחוץ', 'חכם', 'מבולבל', 'מניפולטיבי', 'אדיש'];
@@ -2417,13 +2417,13 @@ STRICT RULES:
 
             if (currentLanguage === 'en') {
                 const situationsEn = [
-                    { main: 'overcharge on HOT bill', background: 'received a higher-than-expected HOT Mobile bill for services that were supposed to be free' },
-                    { main: 'HOT TV added without consent', background: 'HOT TV was automatically added to the plan without requesting it and was charged for it' },
-                    { main: 'retention offer mismatch', background: 'HOT offered a retention deal on a call but the bill came out different from what was promised' },
-                    { main: 'wrong charge after porting to HOT', background: 'received an incorrect first bill after porting their number to HOT Mobile' },
-                    { main: 'HOT plan data finished early', background: 'the monthly HOT data plan ran out well before the billing cycle ended with no warning' },
-                    { main: 'price higher than advertised', background: 'the HOT plan price shown online is lower than what appears on the bill' },
-                    { main: 'competitor offered cheaper HOT-equivalent plan', background: 'a competitor is offering the same data allowance for ₪10 less per month' }
+                    { main: 'overcharge on bill', background: 'received a higher-than-expected bill for services that were supposed to be free' },
+                    { main: 'TV service added without consent', background: 'TV service was automatically added to the plan without requesting it and was charged for it' },
+                    { main: 'retention offer mismatch', background: 'company offered a retention deal on a call but the bill came out different from what was promised' },
+                    { main: 'wrong charge after porting', background: 'received an incorrect first bill after porting their number' },
+                    { main: 'plan data finished early', background: 'the monthly data plan ran out well before the billing cycle ended with no warning' },
+                    { main: 'price higher than advertised', background: 'the plan price shown online is lower than what appears on the bill' },
+                    { main: 'competitor offered cheaper equivalent plan', background: 'a competitor is offering the same data allowance for ₪10 less per month' }
                 ];
                 const traitsPoolEn = ['nervous', 'skeptical', 'cold', 'pressed', 'smart', 'confused', 'calculating', 'indifferent'];
                 const sit = situationsEn[Math.floor(Math.random() * situationsEn.length)];
@@ -2452,12 +2452,12 @@ STRICT RULES:
             }
 
             const situations = [
-                { main: 'חיוב יתר בחשבון HOT', backgroundMale: 'קיבל חשבון HOT גבוה מהצפוי על שירותים שהיו אמורים להיות חינמיים', backgroundFemale: 'קיבלה חשבון HOT גבוה מהצפוי על שירותים שהיו אמורים להיות חינמיים' },
-                { main: 'HOT TV נוסף ללא הסכמה', backgroundMale: 'שירות HOT TV נוסף לחשבון שלו בלי שביקש וחויב עליו', backgroundFemale: 'שירות HOT TV נוסף לחשבון שלה בלי שביקשה וחויבה עליו' },
-                { main: 'הצעת שימור HOT לא תאמה לחשבון', backgroundMale: 'נציג HOT הציע לו הצעת שימור בשיחה, אבל החשבון יצא שונה ממה שהובטח', backgroundFemale: 'נציג HOT הציע לה הצעת שימור בשיחה, אבל החשבון יצא שונה ממה שהובטח' },
-                { main: 'חשבון ראשון שגוי לאחר מעבר ל-HOT', backgroundMale: 'קיבל חשבון ראשון לא נכון לאחר העברת המספר ל-HOT', backgroundFemale: 'קיבלה חשבון ראשון לא נכון לאחר העברת המספר ל-HOT' },
-                { main: 'חבילת HOT נגמרה מוקדם', backgroundMale: 'החבילה החודשית שלו ב-HOT נגמרה הרבה לפני סוף חודש החיוב בלי אזהרה', backgroundFemale: 'החבילה החודשית שלה ב-HOT נגמרה הרבה לפני סוף חודש החיוב בלי אזהרה' },
-                { main: 'מחיר HOT גבוה ממה שפורסם', backgroundMale: 'מחיר חבילת HOT שמופיע באתר נמוך ממה שמופיע בחשבון שלו', backgroundFemale: 'מחיר חבילת HOT שמופיע באתר נמוך ממה שמופיע בחשבון שלה' },
+                { main: 'חיוב יתר בחשבון', backgroundMale: 'קיבל חשבון גבוה מהצפוי על שירותים שהיו אמורים להיות חינמיים', backgroundFemale: 'קיבלה חשבון גבוה מהצפוי על שירותים שהיו אמורים להיות חינמיים' },
+                { main: 'שירות טלוויזיה נוסף ללא הסכמה', backgroundMale: 'שירות טלוויזיה נוסף לחשבון שלו בלי שביקש וחויב עליו', backgroundFemale: 'שירות טלוויזיה נוסף לחשבון שלה בלי שביקשה וחויבה עליו' },
+                { main: 'הצעת שימור לא תאמה לחשבון', backgroundMale: 'נציג החברה הציע לו הצעת שימור בשיחה, אבל החשבון יצא שונה ממה שהובטח', backgroundFemale: 'נציגת החברה הציעה לה הצעת שימור בשיחה, אבל החשבון יצא שונה ממה שהובטח' },
+                { main: 'חשבון ראשון שגוי לאחר המעבר', backgroundMale: 'קיבל חשבון ראשון לא נכון לאחר העברת המספר', backgroundFemale: 'קיבלה חשבון ראשון לא נכון לאחר העברת המספר' },
+                { main: 'החבילה נגמרה מוקדם', backgroundMale: 'החבילה החודשית שלו נגמרה הרבה לפני סוף חודש החיוב בלי אזהרה', backgroundFemale: 'החבילה החודשית שלה נגמרה הרבה לפני סוף חודש החיוב בלי אזהרה' },
+                { main: 'המחיר גבוה ממה שפורסם', backgroundMale: 'מחיר החבילה שמופיע באתר נמוך ממה שמופיע בחשבון שלו', backgroundFemale: 'מחיר החבילה שמופיע באתר נמוך ממה שמופיע בחשבון שלה' },
                 { main: 'חברה מתחרה הציעה מחיר זול יותר', backgroundMale: 'חברה מתחרה מציעה אותה כמות גלישה ב-10₪ פחות לחודש', backgroundFemale: 'חברה מתחרה מציעה אותה כמות גלישה ב-10₪ פחות לחודש' }
             ];
             const traitsPool = ['עצבני', 'סקפטי', 'קר', 'לחוץ', 'חכם', 'מבולבל', 'מניפולטיבי', 'אדיש'];
@@ -2495,10 +2495,10 @@ STRICT RULES:
 
             if (currentLanguage === 'en') {
                 const situationsEn = [
-                    { main: 'no HOT Mobile signal at home', background: 'the phone shows HOT network but has no bars and calls keep failing' },
-                    { main: 'HOT Fiber router red light', background: 'the HOT fiber router shows a red status light and there is no internet at all' },
-                    { main: 'MNP code not received from HOT', background: 'requested a number portability code from HOT to switch carriers but it never arrived' },
-                    { main: 'HOT Mobile data not working abroad', background: 'is traveling outside Israel and the international data roaming with HOT does not connect' }
+                    { main: 'no carrier signal at home', background: 'the phone shows the carrier network but has no bars and calls keep failing' },
+                    { main: 'Fiber router red light', background: 'the fiber router shows a red status light and there is no internet at all' },
+                    { main: 'MNP code not received', background: 'requested a number portability code to switch carriers but it never arrived' },
+                    { main: 'carrier data not working abroad', background: 'is traveling outside Israel and the international data roaming does not connect' }
                 ];
                 const traitsPoolEn = ['nervous', 'skeptical', 'cold', 'pressed', 'smart', 'confused', 'calculating', 'indifferent'];
                 const sit = situationsEn[Math.floor(Math.random() * situationsEn.length)];
@@ -2527,10 +2527,10 @@ STRICT RULES:
             }
 
             const situations = [
-                { mainMale: 'אין לי קליטה של HOT בבית', mainFemale: 'אין לי קליטה של HOT בבית', background: 'הטלפון מראה רשת HOT אבל אין עוצמה ושיחות נכשלות כל הזמן' },
-                { mainMale: 'הנתב של HOT Fiber מראה נורה אדומה', mainFemale: 'הנתב של HOT Fiber מראה נורה אדומה', background: 'נתב הסיבים של HOT מראה אור אדום ואין אינטרנט בכלל בבית' },
-                { mainMale: 'לא קיבלתי קוד MNP מ-HOT', mainFemale: 'לא קיבלתי קוד MNP מ-HOT', background: 'ביקשתי קוד ניוד מספר מ-HOT כדי לעבור לחברה אחרת אבל הקוד לא הגיע' },
-                { mainMale: 'גלישה בחו"ל של HOT לא עובדת', mainFemale: 'גלישה בחו"ל של HOT לא עובדת', background: 'נמצא בחו"ל וגלישת הרואמינג הבינלאומי של HOT לא מתחברת בכלל' }
+                { mainMale: 'אין לי קליטה בבית', mainFemale: 'אין לי קליטה בבית', background: 'הטלפון מראה רשת אבל אין עוצמה ושיחות נכשלות כל הזמן' },
+                { mainMale: 'הנתב של הסיבים מראה נורה אדומה', mainFemale: 'הנתב של הסיבים מראה נורה אדומה', background: 'נתב הסיבים מראה אור אדום ואין אינטרנט בכלל בבית' },
+                { mainMale: 'לא קיבלתי קוד MNP', mainFemale: 'לא קיבלתי קוד MNP', background: 'ביקשתי קוד ניוד מספר כדי לעבור לחברה אחרת אבל הקוד לא הגיע' },
+                { mainMale: 'גלישה בחו"ל לא עובדת', mainFemale: 'גלישה בחו"ל לא עובדת', background: 'נמצא בחו"ל וגלישת הרואמינג הבינלאומי לא מתחברת בכלל' }
             ];
             const traitsPool = ['עצבני', 'סקפטי', 'קר', 'לחוץ', 'חכם', 'מבולבל', 'מניפולטיבי', 'אדיש'];
 
