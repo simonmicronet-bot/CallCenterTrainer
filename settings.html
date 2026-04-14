@@ -3,15 +3,15 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>הגדרות שיחה</title>
+    <title>הגדרות שיחה | HOT מובייל</title>
     <style>
         :root {
-            --bg: #eef3f7;
+            --bg: #fdf2f2;
             --surface: #ffffff;
             --text: #1f2937;
             --muted: #6b7280;
-            --primary: #2563eb;
-            --primary-soft: #dbeafe;
+            --primary: #e8001c;
+            --primary-soft: #fde8ea;
             --border: rgba(15, 23, 42, 0.08);
             --shadow: 0 20px 50px rgba(15, 23, 42, 0.08);
         }
@@ -25,7 +25,7 @@
             min-height: 100vh;
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             color: var(--text);
-            background: linear-gradient(180deg, #eef3f7 0%, #f8fafc 100%);
+            background: linear-gradient(180deg, #fdf2f2 0%, #f8fafc 100%);
             display: flex;
             justify-content: center;
             align-items: center;
@@ -231,8 +231,6 @@
             font-size: 0.9rem;
         }
 
-
-
         .update-btn {
             width: 100%;
             padding: 16px;
@@ -248,7 +246,7 @@
 
         .update-btn:hover {
             transform: translateY(-1px);
-            box-shadow: 0 8px 20px rgba(37, 99, 235, 0.3);
+            box-shadow: 0 8px 20px rgba(232, 0, 28, 0.3);
         }
 
         .success-message {
@@ -256,6 +254,17 @@
             padding: 12px 16px;
             background: #dcfce7;
             color: #166534;
+            border-radius: 8px;
+            text-align: center;
+            display: none;
+        }
+
+        .error-message {
+            margin-top: 16px;
+            padding: 12px 16px;
+            background: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fca5a5;
             border-radius: 8px;
             text-align: center;
             display: none;
@@ -278,10 +287,10 @@
 <body>
     <div class="page">
         <div class="header">
-            <img src="logo.png" alt="Logo" class="top-logo">
+            <img src="logo.png" alt="HOT מובייל" class="top-logo">
             <a href="home.html" class="home-link">דף ראשי</a>
             <h1>הגדרות שיחה</h1>
-            <p>שנה את הגדרות הטיימרים והפרמטרים של השיחה עם הלקוח</p>
+            <p>שנה את הגדרות הטיימרים ופרמטרי הסימולציה עבור HOT מובייל</p>
         </div>
 
         <div class="content">
@@ -339,70 +348,68 @@
 
             <div class="setting-item-script">
                 <div class="setting-label"><span class="setting-label-icon">📥</span>משפט פתיחה — שיחה נכנסת</div>
-                <textarea id="openingScriptIncoming" class="script-textarea" placeholder="לדוגמה: שלום, מדברים עם [שם], איך אוכל לעזור?"></textarea>
+                <textarea id="openingScriptIncoming" class="script-textarea" placeholder="לדוגמה: שלום, HOT מובייל, [שם הסוכן] לשירותך — במה אוכל לעזור?"></textarea>
             </div>
 
             <div class="setting-item-script">
                 <div class="setting-label"><span class="setting-label-icon">📤</span>משפט פתיחה — שיחה יוצאת</div>
-                <textarea id="openingScriptOutgoing" class="script-textarea" placeholder="לדוגמה: שלום, מדברים עם [שם] מחברת X, התקשרתי בנוגע ל..."></textarea>
+                <textarea id="openingScriptOutgoing" class="script-textarea" placeholder="לדוגמה: שלום, אני [שם הסוכן] מ-HOT מובייל, מתקשר/ת בנוגע ל..."></textarea>
             </div>
 
             <div class="setting-item-script">
                 <div class="setting-label"><span class="setting-label-icon">👋</span>משפט סגירה (לכל סוגי השיחות)</div>
-                <textarea id="closingScript" class="script-textarea" placeholder="לדוגמה: שמחתי לעזור, המשך יום נעים!"></textarea>
+                <textarea id="closingScript" class="script-textarea" placeholder="לדוגמה: שמחתי לעזור, יום טוב ממשפחת HOT!"></textarea>
             </div>
 
             <button class="update-btn" onclick="updateSettings()">עדכן הגדרות</button>
 
-            <div class="success-message" id="successMessage">
-                ההגדרות עודכנו בהצלחה!
-            </div>
+            <div class="success-message" id="successMessage">ההגדרות עודכנו בהצלחה!</div>
+            <div class="error-message" id="errorMessage"></div>
         </div>
     </div>
 
     <script>
-        // Load saved settings on page load
         document.addEventListener('DOMContentLoaded', function() {
-            const impatienceTimer = localStorage.getItem('impatienceTimer') || 30;
-            const disconnectTimer = localStorage.getItem('disconnectTimer') || 100;
-            const conversationDirection = localStorage.getItem('conversationDirection') || 'incoming';
-            const appLanguage = localStorage.getItem('appLanguage') || 'he';
-            const conversationMode = localStorage.getItem('conversationMode') || 'auto';
-
-            document.getElementById('impatienceTimer').value = impatienceTimer;
-            document.getElementById('disconnectTimer').value = disconnectTimer;
-            document.getElementById('conversationDirection').value = conversationDirection;
-            document.getElementById('appLanguage').value = appLanguage;
-            document.getElementById('conversationMode').value = conversationMode;
+            document.getElementById('impatienceTimer').value = localStorage.getItem('impatienceTimer') || 30;
+            document.getElementById('disconnectTimer').value = localStorage.getItem('disconnectTimer') || 100;
+            document.getElementById('conversationDirection').value = localStorage.getItem('conversationDirection') || 'incoming';
+            document.getElementById('appLanguage').value = localStorage.getItem('appLanguage') || 'he';
+            document.getElementById('conversationMode').value = localStorage.getItem('conversationMode') || 'auto';
             document.getElementById('openingScriptIncoming').value = localStorage.getItem('openingScriptIncoming') || '';
             document.getElementById('openingScriptOutgoing').value = localStorage.getItem('openingScriptOutgoing') || '';
             document.getElementById('closingScript').value = localStorage.getItem('closingScript') || '';
         });
 
+        function showSettingsError(msg) {
+            const el = document.getElementById('errorMessage');
+            el.textContent = msg;
+            el.style.display = 'block';
+            document.getElementById('successMessage').style.display = 'none';
+            setTimeout(() => { el.style.display = 'none'; }, 5000);
+        }
+
         function updateSettings() {
-            const impatienceTimer = document.getElementById('impatienceTimer').value;
-            const disconnectTimer = document.getElementById('disconnectTimer').value;
+            const impatienceTimer = parseInt(document.getElementById('impatienceTimer').value);
+            const disconnectTimer = parseInt(document.getElementById('disconnectTimer').value);
             const conversationDirection = document.getElementById('conversationDirection').value;
             const appLanguage = document.getElementById('appLanguage').value;
             const conversationMode = document.getElementById('conversationMode').value;
 
-            // Validate inputs
             if (impatienceTimer < 5 || impatienceTimer > 120) {
-                alert('טיימר חוסר סבלנות חייב להיות בין 5 ל-120 שניות');
+                showSettingsError('טיימר חוסר סבלנות חייב להיות בין 5 ל-120 שניות');
                 return;
             }
 
             if (disconnectTimer < 30 || disconnectTimer > 300) {
-                alert('טיימר ניתוק חייב להיות בין 30 ל-300 שניות');
+                showSettingsError('טיימר ניתוק חייב להיות בין 30 ל-300 שניות');
                 return;
             }
 
-            if (parseInt(disconnectTimer) <= parseInt(impatienceTimer)) {
-                alert('טיימר ניתוק חייב להיות גדול מטיימר חוסר סבלנות');
+            if (disconnectTimer <= impatienceTimer) {
+                showSettingsError('טיימר ניתוק חייב להיות גדול מטיימר חוסר סבלנות');
                 return;
             }
 
-            // Save to localStorage
             localStorage.setItem('impatienceTimer', impatienceTimer);
             localStorage.setItem('disconnectTimer', disconnectTimer);
             localStorage.setItem('conversationDirection', conversationDirection);
@@ -412,12 +419,10 @@
             localStorage.setItem('openingScriptOutgoing', document.getElementById('openingScriptOutgoing').value.trim());
             localStorage.setItem('closingScript', document.getElementById('closingScript').value.trim());
 
-            // Show success message
             const successMessage = document.getElementById('successMessage');
             successMessage.style.display = 'block';
-            setTimeout(() => {
-                successMessage.style.display = 'none';
-            }, 3000);
+            document.getElementById('errorMessage').style.display = 'none';
+            setTimeout(() => { successMessage.style.display = 'none'; }, 3000);
         }
     </script>
 </body>

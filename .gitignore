@@ -1,0 +1,10 @@
+# API keys - never commit these
+.env
+apiKey.txt
+
+# Dependencies
+node_modules/
+
+# OS files
+.DS_Store
+Thumbs.db

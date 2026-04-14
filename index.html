@@ -3,15 +3,15 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>סימולציית שיחה עם לקוח AI</title>
+    <title>סימולטור שיחה | HOT מובייל</title>
     <style>
         :root {
-            --bg: #eef3f7;
+            --bg: #fdf2f2;
             --surface: #ffffff;
             --text: #1f2937;
             --muted: #6b7280;
-            --primary: #2563eb;
-            --primary-soft: #dbeafe;
+            --primary: #e8001c;
+            --primary-soft: #fde8ea;
             --border: rgba(15, 23, 42, 0.08);
             --shadow: 0 20px 50px rgba(15, 23, 42, 0.08);
         }
@@ -25,7 +25,7 @@
             min-height: 100vh;
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             color: var(--text);
-            background: linear-gradient(180deg, #eef3f7 0%, #f8fafc 100%);
+            background: linear-gradient(180deg, #fdf2f2 0%, #f8fafc 100%);
             display: flex;
             justify-content: center;
             align-items: center;
@@ -172,11 +172,11 @@
             min-width: 52px;
             padding: 0;
             border-radius: 14px;
-            border: 2px solid #1d4ed8;
-            background: linear-gradient(180deg, #f8fbff 0%, #dbeafe 100%);
-            color: #1e3a8a;
+            border: 2px solid #e8001c;
+            background: linear-gradient(180deg, #fff5f5 0%, #fde8ea 100%);
+            color: #9a000f;
             text-decoration: none;
-            box-shadow: 0 8px 18px rgba(37, 99, 235, 0.18);
+            box-shadow: 0 8px 18px rgba(232, 0, 28, 0.18);
             flex: 0 0 52px;
             transition: transform 0.2s ease, box-shadow 0.2s ease;
         }
@@ -199,7 +199,7 @@
 
         .analysis-btn:hover {
             transform: translateY(-1px);
-            box-shadow: 0 10px 22px rgba(37, 99, 235, 0.24);
+            box-shadow: 0 10px 22px rgba(232, 0, 28, 0.24);
         }
 
         .controls-row {
@@ -299,7 +299,7 @@
 
         button:hover:not(:disabled) {
             transform: translateY(-1px);
-            box-shadow: 0 10px 24px rgba(37, 99, 235, 0.16);
+            box-shadow: 0 10px 24px rgba(232, 0, 28, 0.16);
         }
 
         button:disabled {
@@ -362,7 +362,7 @@
 
         .user {
             margin-inline-start: auto;
-            background: #2563eb;
+            background: #e8001c;
             color: #ffffff;
             text-align: right;
         }
@@ -385,6 +385,49 @@
             grid-template-columns: 1fr auto auto;
             padding: 0 32px 32px;
             align-items: center;
+        }
+
+        /* Thinking indicator while waiting for AI response */
+        .thinking-bubble {
+            display: flex;
+            gap: 5px;
+            align-items: center;
+            padding: 14px 18px;
+            border-radius: 18px;
+            width: 70px;
+            background: #ffffff;
+            border: 1px solid var(--border);
+            box-shadow: 0 2px 10px rgba(15, 23, 42, 0.04);
+            margin-bottom: 14px;
+        }
+
+        .thinking-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #e8001c;
+            animation: thinking-pulse 1.2s infinite ease-in-out;
+        }
+
+        .thinking-dot:nth-child(2) { animation-delay: 0.2s; }
+        .thinking-dot:nth-child(3) { animation-delay: 0.4s; }
+
+        @keyframes thinking-pulse {
+            0%, 80%, 100% { transform: scale(0.65); opacity: 0.4; }
+            40% { transform: scale(1); opacity: 1; }
+        }
+
+        /* Inline error banner */
+        #inlineError {
+            display: none;
+            margin: 0 32px 12px;
+            padding: 10px 16px;
+            background: #fef2f2;
+            border: 1px solid #fca5a5;
+            color: #991b1b;
+            border-radius: 10px;
+            font-size: 0.9rem;
+            text-align: center;
         }
 
         @media (max-width: 640px) {
@@ -413,10 +456,10 @@
 <body>
     <div class="page">
         <div class="header">
-            <img src="logo.png" alt="Logo" class="top-logo">
+            <img src="logo.png" alt="HOT מובייל" class="top-logo">
             <a href="home.html" class="home-link">דף ראשי</a>
-            <h1>סימולציית שיחה עם לקוח AI</h1>
-            <p>בחר את התחום המקצועי והתחל תרחיש לקוחות עם פרופיל רנדומלי לגימור מקצועי.</p>
+            <h1>סימולטור שיחה — HOT מובייל</h1>
+            <p>בחר תחום, רמת קושי ושם הנציג — ותתחיל שיחה עם לקוח HOT וירטואלי מבוסס AI.</p>
             <div class="status-row" id="statusBanner">
                 <span>
                     <svg id="statusIcon" class="status-dot status-idle" viewBox="0 0 24 24" aria-hidden="true">
@@ -432,9 +475,9 @@
                 <div>
                     <label for="conversationType">בחר תחום מקצועי</label>
                     <select id="conversationType">
-                        <option value="sales">מכירה</option>
-                        <option value="service">שרות</option>
-                        <option value="technical">טכני</option>
+                        <option value="sales">מכירה — HOT מובייל</option>
+                        <option value="service">שירות לקוחות — HOT מובייל</option>
+                        <option value="technical">תמיכה טכנית — HOT מובייל</option>
                     </select>
                 </div>
                 <div>
@@ -464,6 +507,7 @@
         <div id="chatWrapper">
             <div id="chat"></div>
         </div>
+        <div id="inlineError"></div>
         <div class="input-row">
             <input type="text" id="messageInput" placeholder="הקלד הודעה..." disabled>
             <button id="sendBtn" disabled>שלח</button>
@@ -520,8 +564,8 @@
             dirIncomingShort: 'נכנסת',
             dirOutgoingShort: 'יוצאת',
             domainSales: 'מכירה',
-            domainService: 'שרות',
-            domainTechnical: 'טכני'
+            domainService: 'שירות לקוחות',
+            domainTechnical: 'תמיכה טכנית'
         };
 
         function S(key) {
@@ -561,6 +605,123 @@
         let noFemaleVoiceWarningShown = false;
         let cachedTTSVoices = [];
         let selectedCustomerVoices = { male: null, female: null, neutral: null };
+
+        // AI conversation state
+        let conversationHistory = [];
+        let currentSystemPrompt = '';
+        let isAwaitingAiResponse = false;
+
+        // ─── Inline error helper ───────────────────────────────────────────────────
+        let inlineErrorTimer = null;
+        function showInlineError(msg) {
+            const el = document.getElementById('inlineError');
+            if (!el) return;
+            el.textContent = msg;
+            el.style.display = 'block';
+            if (inlineErrorTimer) clearTimeout(inlineErrorTimer);
+            inlineErrorTimer = setTimeout(() => { el.style.display = 'none'; }, 6000);
+        }
+        function hideInlineError() {
+            const el = document.getElementById('inlineError');
+            if (el) el.style.display = 'none';
+        }
+
+        // ─── Thinking indicator ────────────────────────────────────────────────────
+        let thinkingBubble = null;
+        function showThinkingIndicator() {
+            if (thinkingBubble) return;
+            thinkingBubble = document.createElement('div');
+            thinkingBubble.className = 'thinking-bubble';
+            thinkingBubble.innerHTML = '<div class="thinking-dot"></div><div class="thinking-dot"></div><div class="thinking-dot"></div>';
+            chat.appendChild(thinkingBubble);
+            chat.scrollTop = chat.scrollHeight;
+            sendBtn.disabled = true;
+            voiceBtn.disabled = true;
+            messageInput.disabled = true;
+        }
+        function hideThinkingIndicator() {
+            if (thinkingBubble) {
+                thinkingBubble.remove();
+                thinkingBubble = null;
+            }
+            if (conversationStarted) {
+                sendBtn.disabled = false;
+                voiceBtn.disabled = !SpeechRecognitionClass;
+                messageInput.disabled = false;
+                messageInput.focus();
+            }
+        }
+
+        // ─── Build HOT Mobile system prompt ───────────────────────────────────────
+        function buildSystemPrompt(scenario) {
+            const genderStr = scenario.gender === 'female' ? 'נקבה' : 'זכר';
+            const directionStr = loadConversationDirection() === 'outgoing' ? 'שיחה יוצאת (הסוכן התקשר אליך)' : 'שיחה נכנסת (אתה התקשרת לשירות לקוחות)';
+            const moodStr = scenario.conversationMode?.label || 'מאוזן';
+            const diffStr = scenario.difficulty || 'בסיסי';
+            const lang = currentLanguage === 'en' ? 'English' : 'עברית';
+
+            if (currentLanguage === 'en') {
+                return `You are a virtual HOT Mobile customer in a call-center training simulation.
+
+Your character:
+- Name: ${scenario.name} (${genderStr === 'נקבה' ? 'female' : 'male'}, age ${scenario.age})
+- Issue: ${scenario.situation}. ${scenario.background}
+- Personality type: ${scenario.customerType || ''} — ${scenario.customerPersonaSummary || ''}
+- Mood: ${moodStr}
+- Difficulty: ${diffStr}
+- Character traits: ${(scenario.traits || []).join(', ')}
+
+About HOT Mobile (what you know as a customer):
+- HOT Mobile is an Israeli mobile carrier, part of the HOT group
+- Plans available: HOT 60GB at ₪29/month, HOT Unlimited at ₪49/month, HOT Family (4 lines) at ₪129/month
+- Also offers: HOT TV, fiber optics, device financing for Apple/Samsung/Xiaomi
+- Customer service number: *1559
+
+Call type: ${directionStr}
+Respond in: English
+
+STRICT RULES:
+1. You are a customer — never break character, never admit you are AI
+2. Only reveal your name when directly asked. Never volunteer it.
+3. If asked for phone number, provide a realistic Israeli number (05X-XXXXXXX). If asked for ID number, provide a 9-digit number.
+4. If asked to hold/wait, respond briefly ("Okay", "Fine, but hurry")
+5. Difficulty ${diffStr}: ${diffStr === 'advanced' ? 'Very demanding. Will escalate, threaten to cancel, refuse partial answers.' : diffStr === 'intermediate' ? 'Pushes back. Needs real solutions, not vague promises.' : 'Relatively patient, but still wants a clear answer.'}
+6. React to quality: if the agent handles you well, soften slightly. If they dodge or repeat themselves, get more frustrated.
+7. DISCONNECTING: If the agent gives the same useless answer 3+ times, or is rude, or you feel ignored — write [[DISCONNECT]] then a short goodbye line.
+8. Keep replies short — 1 to 3 sentences max. Like a real phone call.
+9. Do NOT write "Customer:" before your response. Just speak directly.`;
+            }
+
+            return `אתה לקוח/ת HOT מובייל בסימולציית אימון לנציגי שירות לקוחות.
+
+**הדמות שלך:**
+- שם: ${scenario.name} | מין: ${genderStr} | גיל: ${scenario.age}
+- הבעיה: ${scenario.situation}. ${scenario.background}
+- סוג לקוח: ${scenario.customerType || ''} — ${scenario.customerPersonaSummary || ''}
+- מצב רוח: ${moodStr}
+- רמת קושי: ${diffStr}
+- תכונות אופי: ${(scenario.traits || []).join(', ')}
+
+**מה אתה יודע על HOT מובייל:**
+- HOT מובייל היא חברת הסלולר של קבוצת HOT
+- חבילות: HOT 60GB ב-29₪, HOT ללא הגבלה ב-49₪, HOT משפחה 4 קווים ב-129₪
+- שירותים נוספים: HOT TV, סיבים אופטיים, מימון מכשירים (Apple/Samsung/Xiaomi)
+- *1559 — מספר שירות לקוחות
+
+**סוג שיחה:** ${directionStr}
+**שפת תגובה:** עברית בלבד
+
+**חוקים מחייבים:**
+1. אתה לקוח אמיתי — אל תשבר את הדמות, אל תגלה שאתה AI
+2. חשוף את שמך רק כשנשאלת ישירות. אל תציין אותו מיוזמתך.
+3. אם ביקשו מספר טלפון — תן מספר ישראלי אמיתי (05X-XXXXXXX). אם ביקשו ת.ז. — תן מספר בן 9 ספרות.
+4. אם ביקשו לחכות — השב בקצרה ("בסדר", "בסדר רק תזדרז")
+5. לפי רמת קושי ${diffStr}: ${diffStr === 'מתקדם' || diffStr === 'advanced' ? 'מאוד תובעני. יאיים לעזוב, ידרוש פתרון מידי, לא יקבל תשובות חלקיות.' : diffStr === 'בינוני' || diffStr === 'intermediate' ? 'דוחף לתשובות ממשיות. לא מסתפק בהבטחות.' : 'סבלני יחסית, אבל מצפה לתשובה ברורה.'}
+6. הגב לאיכות השירות: אם הנציג מטפל בך טוב — שחרר מעט. אם הוא חוזר על אותה תשובה או מתחמק — תעצבן.
+7. **ניתוק:** אם הנציג חזר על אותה תשובה חסרת תועלת 3+ פעמים, גס רוח, או שאתה מרגיש מתעלמים ממך — כתוב [[DISCONNECT]] ואז משפט פרידה קצר.
+8. תשובות קצרות — 1 עד 3 משפטים בלבד. כמו בשיחת טלפון אמיתית.
+9. אל תכתוב "לקוח:" לפני התשובה. דבר ישירות.`;
+        }
 
         function setAnalysisButtonEnabled(enabled) {
             analysisBtn.classList.toggle('is-disabled', !enabled);
@@ -1581,6 +1742,10 @@
             offeredAdditionalHelp = false;
             customerIdentificationRequested = false;
             customerIssueOccurrences = new Map();
+            conversationHistory = [];
+            currentSystemPrompt = '';
+            isAwaitingAiResponse = false;
+            hideThinkingIndicator();
             setAnalysisButtonEnabled(true);
 
             addMessage(systemMessage, 'system');
@@ -1631,8 +1796,19 @@
                         ]);
                     const randomResponse = impatientResponses[Math.floor(Math.random() * impatientResponses.length)];
                     addMessageWithoutTimerReset(getCustomerLabel() + ': ' + randomResponse, 'agent');
-                    // Restart only the impatience timer, not the disconnect timer
-                    startImpatienceTimer();
+                    // Re-arm only the impatience part (not the disconnect timer)
+                    if (inactivityTimer) clearTimeout(inactivityTimer);
+                    const _rearmedDelay = Math.max(10, Math.round((parseInt(localStorage.getItem('impatienceTimer')) || 30) * (currentScenario?.conversationMode?.impatienceMultiplier || 1)));
+                    inactivityTimer = setTimeout(function rearmImpatience() {
+                        if (!conversationStarted) return;
+                        const _gender = currentScenario?.gender || 'male';
+                        const _pool = currentScenario?.impatienceResponses || (currentLanguage === 'en'
+                            ? ['What is happening?', 'I have been waiting!', 'Hello? Is anyone there?', 'Please answer already.', 'I am still waiting...']
+                            : ['מה קורה?', 'אני עדיין מחכה...', 'הלו? יש מישהו שם?', getGenderedText(_gender, 'אני לא סבלני!', 'אני לא סבלנית!'), 'תענה לי כבר!']);
+                        addMessageWithoutTimerReset(getCustomerLabel() + ': ' + _pool[Math.floor(Math.random() * _pool.length)], 'agent');
+                        if (inactivityTimer) clearTimeout(inactivityTimer);
+                        inactivityTimer = setTimeout(rearmImpatience, _rearmedDelay * 1000);
+                    }, _rearmedDelay * 1000);
                 }
             }, effectiveImpatienceDelay * 1000);
             
@@ -1663,52 +1839,6 @@
                     }
                 }
             }, effectiveDisconnectDelay * 1000);
-        }
-
-        function startImpatienceTimer() {
-            // Load settings from localStorage
-            const impatienceDelay = parseInt(localStorage.getItem('impatienceTimer')) || 30;
-            const moodMultiplier = currentScenario?.conversationMode?.impatienceMultiplier || 1;
-            const effectiveImpatienceDelay = Math.max(10, Math.round(impatienceDelay * moodMultiplier));
-            
-            // Clear existing impatience timer only
-            if (inactivityTimer) {
-                clearTimeout(inactivityTimer);
-            }
-            
-            // Start impatience timer
-            inactivityTimer = setTimeout(() => {
-                if (conversationStarted) {
-                    const gender = currentScenario?.gender || 'male';
-                    const impatientResponses = currentScenario?.impatienceResponses || (currentLanguage === 'en'
-                        ? [
-                            'What is happening? Why are you not responding?',
-                            'I have been waiting for a long time!',
-                            'Please answer already, I cannot wait all day!',
-                            'Hello? Is anyone there?',
-                            'This is taking too long, please hurry.',
-                            'I am starting to lose patience here...',
-                            'Respond already, I am not patient!',
-                            'Do you have nothing to say?',
-                            'I am still waiting...'
-                        ]
-                        : [
-                            'מה קורה? למה אתה לא עונה?',
-                            'אני מחכה כבר הרבה זמן!',
-                            getGenderedText(gender, 'תענה לי כבר, אני לא יכול לחכות כל היום!', 'תענה לי כבר, אני לא יכולה לחכות כל היום!'),
-                            'הלו? יש מישהו שם?',
-                            'זה לוקח יותר מדי זמן, תזדרז!',
-                            getGenderedText(gender, 'אני מתחיל להתייאש כאן...', 'אני מתחילה להתייאש כאן...'),
-                            getGenderedText(gender, 'תגיב כבר, אני לא סבלני!', 'תגיב כבר, אני לא סבלנית!'),
-                            'אין לך מה להגיד?',
-                            'אני עדיין מחכה...'
-                        ]);
-                    const randomResponse = impatientResponses[Math.floor(Math.random() * impatientResponses.length)];
-                    addMessageWithoutTimerReset(getCustomerLabel() + ': ' + randomResponse, 'agent');
-                    // Restart only the impatience timer
-                    startImpatienceTimer();
-                }
-            }, effectiveImpatienceDelay * 1000);
         }
 
         function addMessageWithoutTimerReset(text, type) {
@@ -2205,9 +2335,9 @@
 
             if (currentLanguage === 'en') {
                 const situationsEn = [
-                    { main: 'interested in a new iPhone', background: 'heard the price might drop and wants to know if it\'s worth switching now' },
-                    { main: 'interested in joining a mobile plan', background: 'wants to switch to your plan with a promotional first-period discount' },
-                    { main: 'looking for an affordable new phone', background: 'wants a budget device with good specs and a matching mobile plan' }
+                    { main: 'interested in the HOT Unlimited plan at ₪49/month', background: 'heard about a join offer and wants to know the full terms before committing' },
+                    { main: 'interested in upgrading to iPhone 16 with HOT financing', background: 'current phone is broken and wants to check monthly payment options with HOT' },
+                    { main: 'interested in switching to HOT Mobile with number portability', background: 'is with a competitor and wants to know what HOT can offer to make the switch worthwhile' }
                 ];
                 const traitsPoolEn = ['nervous', 'skeptical', 'cold', 'pressed', 'smart', 'confused', 'calculating', 'indifferent'];
                 const sit = situationsEn[Math.floor(Math.random() * situationsEn.length)];
@@ -2235,22 +2365,22 @@
 
             const situations = [
                 {
-                    mainMale: 'מתעניין באייפון חדש',
-                    mainFemale: 'מתעניינת באייפון חדש',
-                    backgroundMale: 'שמע שהמחיר עומד לרדת והוא רוצה לדעת אם כדאי לעבור עכשיו',
-                    backgroundFemale: 'שמעה שהמחיר עומד לרדת והיא רוצה לדעת אם כדאי לעבור עכשיו'
+                    mainMale: 'מתעניין בחבילת HOT ללא הגבלה ב-49₪',
+                    mainFemale: 'מתעניינת בחבילת HOT ללא הגבלה ב-49₪',
+                    backgroundMale: 'שמע על מבצע הצטרפות ורוצה לדעת את כל התנאים לפני שמתחייב',
+                    backgroundFemale: 'שמעה על מבצע הצטרפות ורוצה לדעת את כל התנאים לפני שמתחייבת'
                 },
                 {
-                    mainMale: 'מתעניין בהצטרפות לשרות הסלולר',
-                    mainFemale: 'מתעניינת בהצטרפות לשרות הסלולר',
-                    backgroundMale: 'מעוניין לעבור לחבילה שלכם עם הטבה לתקופה ראשונה',
-                    backgroundFemale: 'מעוניינת לעבור לחבילה שלכם עם הטבה לתקופה ראשונה'
+                    mainMale: 'מתעניין בשדרוג לאייפון 16 במימון HOT',
+                    mainFemale: 'מתעניינת בשדרוג לאייפון 16 במימון HOT',
+                    backgroundMale: 'הטלפון שלו התקלקל והוא רוצה לבדוק אפשרויות תשלום חודשי עם HOT',
+                    backgroundFemale: 'הטלפון שלה התקלקל והיא רוצה לבדוק אפשרויות תשלום חודשי עם HOT'
                 },
                 {
-                    mainMale: 'מתעניין בטלפון חדש זול',
-                    mainFemale: 'מתעניינת בטלפון חדש זול',
-                    backgroundMale: 'מחפש מכשיר זול עם מפרט טוב וגם חבילת סלולר שתתאים לו',
-                    backgroundFemale: 'מחפשת מכשיר זול עם מפרט טוב וגם חבילת סלולר שתתאים לה'
+                    mainMale: 'מעוניין לעבור ל-HOT מובייל עם שמירת מספר',
+                    mainFemale: 'מעוניינת לעבור ל-HOT מובייל עם שמירת מספר',
+                    backgroundMale: 'כרגע בחברה מתחרה ורוצה לדעת מה HOT יכולה להציע כדי שהמעבר ישתלם',
+                    backgroundFemale: 'כרגע בחברה מתחרה ורוצה לדעת מה HOT יכולה להציע כדי שהמעבר ישתלם'
                 }
             ];
             const traitsPool = ['עצבני', 'סקפטי', 'קר', 'לחוץ', 'חכם', 'מבולבל', 'מניפולטיבי', 'אדיש'];
@@ -2287,14 +2417,13 @@
 
             if (currentLanguage === 'en') {
                 const situationsEn = [
-                    { main: 'overcharge', background: 'received a higher-than-expected bill for inactive services' },
-                    { main: 'unwanted upgrade', background: 'was automatically upgraded to an add-on they didn\'t request' },
-                    { main: 'retention offer mismatch', background: 'was given a retention offer but the bill came out different from what was promised' },
-                    { main: 'billing error after switching', background: 'received an incorrect bill when switching to your service' },
-                    { main: 'contract discrepancy', background: 'the signed contract differs from what was agreed during the call' },
-                    { main: 'plan used up early', background: 'their plan ran out earlier than expected with no notification' },
-                    { main: 'price too high', background: 'the charge is higher than what was originally promised' },
-                    { main: 'cheaper offer from a competitor', background: 'a competitor offered a lower price for the same plan' }
+                    { main: 'overcharge on HOT bill', background: 'received a higher-than-expected HOT Mobile bill for services that were supposed to be free' },
+                    { main: 'HOT TV added without consent', background: 'HOT TV was automatically added to the plan without requesting it and was charged for it' },
+                    { main: 'retention offer mismatch', background: 'HOT offered a retention deal on a call but the bill came out different from what was promised' },
+                    { main: 'wrong charge after porting to HOT', background: 'received an incorrect first bill after porting their number to HOT Mobile' },
+                    { main: 'HOT plan data finished early', background: 'the monthly HOT data plan ran out well before the billing cycle ended with no warning' },
+                    { main: 'price higher than advertised', background: 'the HOT plan price shown online is lower than what appears on the bill' },
+                    { main: 'competitor offered cheaper HOT-equivalent plan', background: 'a competitor is offering the same data allowance for ₪10 less per month' }
                 ];
                 const traitsPoolEn = ['nervous', 'skeptical', 'cold', 'pressed', 'smart', 'confused', 'calculating', 'indifferent'];
                 const sit = situationsEn[Math.floor(Math.random() * situationsEn.length)];
@@ -2323,14 +2452,13 @@
             }
 
             const situations = [
-                { main: 'חיוב יתר', backgroundMale: 'קיבל חשבון גבוה מהצפוי על שירותים לא פעילים', backgroundFemale: 'קיבלה חשבון גבוה מהצפוי על שירותים לא פעילים' },
-                { main: 'שדרוג', backgroundMale: 'שדרגו אותו לאוטומציה נוספת שלא ביקש', backgroundFemale: 'שדרגו אותה לאוטומציה נוספת שלא ביקשה' },
-                { main: 'שימור', backgroundMale: 'הציעו לו הצעה לשימור, אבל החשבון יצא שונה מההבטחה', backgroundFemale: 'הציעו לה הצעה לשימור, אבל החשבון יצא שונה מההבטחה' },
-                { main: 'מעבר חברה', backgroundMale: 'במעבר לחברה שלכם הוא קיבל חשבון לא נכון', backgroundFemale: 'במעבר לחברה שלכם היא קיבלה חשבון לא נכון' },
-                { main: 'טעות בחוזה', backgroundMale: 'החוזה בו נרשם שונה ממה שסוכם בשיחה', backgroundFemale: 'החוזה בו נרשמה שונה ממה שסוכם בשיחה' },
-                { main: 'החבילה נגמרה', backgroundMale: 'החבילה שלו נגמרה מוקדם מהצפוי בלי הודעה', backgroundFemale: 'החבילה שלה נגמרה מוקדם מהצפוי בלי הודעה' },
-                { main: 'מחיר גבוהה מידי', backgroundMale: 'החיוב גבוה מדי ביחס למה שהובטח לו', backgroundFemale: 'החיוב גבוה מדי ביחס למה שהובטח לה' },
-                { main: 'קיבלתי מחיר זול יותר בחברה מתחרה', backgroundMale: 'החברה המתחרה הציעה לו מחיר נמוך יותר באותו מועד', backgroundFemale: 'החברה המתחרה הציעה לה מחיר נמוך יותר באותו מועד' }
+                { main: 'חיוב יתר בחשבון HOT', backgroundMale: 'קיבל חשבון HOT גבוה מהצפוי על שירותים שהיו אמורים להיות חינמיים', backgroundFemale: 'קיבלה חשבון HOT גבוה מהצפוי על שירותים שהיו אמורים להיות חינמיים' },
+                { main: 'HOT TV נוסף ללא הסכמה', backgroundMale: 'שירות HOT TV נוסף לחשבון שלו בלי שביקש וחויב עליו', backgroundFemale: 'שירות HOT TV נוסף לחשבון שלה בלי שביקשה וחויבה עליו' },
+                { main: 'הצעת שימור HOT לא תאמה לחשבון', backgroundMale: 'נציג HOT הציע לו הצעת שימור בשיחה, אבל החשבון יצא שונה ממה שהובטח', backgroundFemale: 'נציג HOT הציע לה הצעת שימור בשיחה, אבל החשבון יצא שונה ממה שהובטח' },
+                { main: 'חשבון ראשון שגוי לאחר מעבר ל-HOT', backgroundMale: 'קיבל חשבון ראשון לא נכון לאחר העברת המספר ל-HOT מובייל', backgroundFemale: 'קיבלה חשבון ראשון לא נכון לאחר העברת המספר ל-HOT מובייל' },
+                { main: 'חבילת HOT נגמרה מוקדם', backgroundMale: 'החבילה החודשית שלו ב-HOT נגמרה הרבה לפני סוף חודש החיוב בלי אזהרה', backgroundFemale: 'החבילה החודשית שלה ב-HOT נגמרה הרבה לפני סוף חודש החיוב בלי אזהרה' },
+                { main: 'מחיר HOT גבוה ממה שפורסם', backgroundMale: 'מחיר חבילת HOT שמופיע באתר נמוך ממה שמופיע בחשבון שלו', backgroundFemale: 'מחיר חבילת HOT שמופיע באתר נמוך ממה שמופיע בחשבון שלה' },
+                { main: 'חברה מתחרה הציעה מחיר זול יותר', backgroundMale: 'חברה מתחרה מציעה אותה כמות גלישה ב-10₪ פחות לחודש', backgroundFemale: 'חברה מתחרה מציעה אותה כמות גלישה ב-10₪ פחות לחודש' }
             ];
             const traitsPool = ['עצבני', 'סקפטי', 'קר', 'לחוץ', 'חכם', 'מבולבל', 'מניפולטיבי', 'אדיש'];
 
@@ -2367,10 +2495,10 @@
 
             if (currentLanguage === 'en') {
                 const situationsEn = [
-                    { main: 'I can\'t make calls from my phone', background: 'The phone fails to connect to a call every time I try' },
-                    { main: 'I\'m not receiving text messages', background: 'Incoming messages don\'t arrive or disappear after sending' },
-                    { main: 'I have no internet', background: 'There\'s no mobile or home internet connection at all' },
-                    { main: 'I can\'t connect to my home internet', background: 'The router shows connected but the device loads nothing' }
+                    { main: 'no HOT Mobile signal at home', background: 'the phone shows HOT network but has no bars and calls keep failing' },
+                    { main: 'HOT Fiber router red light', background: 'the HOT fiber router shows a red status light and there is no internet at all' },
+                    { main: 'MNP code not received from HOT', background: 'requested a number portability code from HOT to switch carriers but it never arrived' },
+                    { main: 'HOT Mobile data not working abroad', background: 'is traveling outside Israel and the international data roaming with HOT does not connect' }
                 ];
                 const traitsPoolEn = ['nervous', 'skeptical', 'cold', 'pressed', 'smart', 'confused', 'calculating', 'indifferent'];
                 const sit = situationsEn[Math.floor(Math.random() * situationsEn.length)];
@@ -2399,10 +2527,10 @@
             }
 
             const situations = [
-                { mainMale: 'אני לא מצליח להוציא שיחה מהטלפון', mainFemale: 'אני לא מצליחה להוציא שיחה מהטלפון', background: 'הטלפון לא מצליח להתחבר לשיחה בכל פעם שמנסים להתקשר' },
-                { mainMale: 'לא מצליח לקבל הודעות טקסט', mainFemale: 'לא מצליחה לקבל הודעות טקסט', background: 'הודעות נכנסות לא מגיעות או נעלמות אחרי שליחה' },
-                { mainMale: 'אין לי אינטרנט', mainFemale: 'אין לי אינטרנט', background: 'אין חיבור אינטרנט סלולר או ביתי בכלל' },
-                { mainMale: 'לא מצליח להתחבר לאינטרנט הביתי', mainFemale: 'לא מצליחה להתחבר לאינטרנט הביתי', background: 'הנתב מראה חיבור אבל המכשיר לא טוען כלום' }
+                { mainMale: 'אין לי קליטה של HOT מובייל בבית', mainFemale: 'אין לי קליטה של HOT מובייל בבית', background: 'הטלפון מראה רשת HOT אבל אין עוצמה ושיחות נכשלות כל הזמן' },
+                { mainMale: 'הנתב של HOT Fiber מראה נורה אדומה', mainFemale: 'הנתב של HOT Fiber מראה נורה אדומה', background: 'נתב הסיבים של HOT מראה אור אדום ואין אינטרנט בכלל בבית' },
+                { mainMale: 'לא קיבלתי קוד MNP מ-HOT', mainFemale: 'לא קיבלתי קוד MNP מ-HOT', background: 'ביקשתי קוד ניוד מספר מ-HOT כדי לעבור לחברה אחרת אבל הקוד לא הגיע' },
+                { mainMale: 'גלישה בחו"ל של HOT לא עובדת', mainFemale: 'גלישה בחו"ל של HOT לא עובדת', background: 'נמצא בחו"ל וגלישת הרואמינג הבינלאומי של HOT לא מתחברת בכלל' }
             ];
             const traitsPool = ['עצבני', 'סקפטי', 'קר', 'לחוץ', 'חכם', 'מבולבל', 'מניפולטיבי', 'אדיש'];
 
@@ -2607,7 +2735,7 @@
             currentLanguage = localStorage.getItem('appLanguage') || 'he';
             const agentFirstName = agentFirstNameInput.value.trim();
             if (!agentFirstName) {
-                alert(S('alertNoName'));
+                showInlineError(S('alertNoName'));
                 agentFirstNameInput.focus();
                 return;
             }
@@ -2656,18 +2784,26 @@
             customerIssueOccurrences = new Map();
             // Clear the chat content
             chat.innerHTML = '';
+            conversationHistory = [];
+            currentSystemPrompt = '';
+            isAwaitingAiResponse = false;
+            hideInlineError();
+
             const type = conversationType.value;
             const selectedDifficulty = difficultyLevel.value;
             if (type === 'sales') currentScenario = generateSalesScenario(selectedDifficulty);
             else if (type === 'service') currentScenario = generateServiceScenario(selectedDifficulty);
             else currentScenario = generateTechnicalScenario(selectedDifficulty);
+
+            // Build system prompt from scenario for AI responses
+            currentSystemPrompt = buildSystemPrompt(currentScenario);
+
             const conversationDirection = loadConversationDirection();
             const typeLabel = getProfessionalTypeLabel(type);
             updateStatus('active', typeLabel, getDifficultyLabel(selectedDifficulty), getConversationModeLabel(currentScenario?.conversationMode?.key));
             if (conversationDirection === 'incoming') {
                 currentScenario.customerScenarioIntroductionSent = false;
                 addMessage(S('incomingSystemMsg'), 'system');
-                // Start inactivity timer
                 startInactivityTimer();
             } else {
                 currentScenario.customerScenarioIntroductionSent = false;
@@ -2675,8 +2811,10 @@
                 if (!conversationStarted) {
                     return;
                 }
-                addMessage(getCustomerLabel() + ': ' + getOutgoingPickupGreeting(), 'agent');
-                // Start inactivity timer only after the dialing and pickup greeting.
+                const pickupGreeting = getOutgoingPickupGreeting();
+                // Seed conversation history with the pickup greeting so AI has context
+                conversationHistory.push({ role: 'assistant', content: pickupGreeting });
+                addMessage(getCustomerLabel() + ': ' + pickupGreeting, 'agent');
                 startInactivityTimer();
             }
         });
@@ -2731,11 +2869,51 @@
 
             addMessage(`${S('youPrefix')}: ` + message, 'user');
             messageInput.value = '';
-            
-            setTimeout(() => {
-                addMessage(getCustomerLabel() + ': ' + simulateAgentResponse(message), 'agent');
-                maybeQueueCustomerFollowUp();
-            }, 1000);
+
+            // Add agent message to conversation history and get AI customer response
+            conversationHistory.push({ role: 'user', content: message });
+            isAwaitingAiResponse = true;
+            showThinkingIndicator();
+
+            fetch('/api/chat', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    messages: conversationHistory,
+                    systemPrompt: currentSystemPrompt
+                })
+            })
+            .then(r => {
+                if (!r.ok) return r.json().then(d => Promise.reject(d.error || 'שגיאת שרת'));
+                return r.json();
+            })
+            .then(data => {
+                hideThinkingIndicator();
+                isAwaitingAiResponse = false;
+                if (!conversationStarted) return;
+
+                const customerReply = data.reply || '';
+                conversationHistory.push({ role: 'assistant', content: customerReply });
+
+                const fullText = getCustomerLabel() + ': ' + customerReply;
+                addMessage(fullText, 'agent');
+
+                if (data.disconnect) {
+                    setTimeout(() => {
+                        if (conversationStarted) {
+                            finalizeConversationAfterCustomerSpeech(getCustomerLabel(), S('disconnectedMsg'));
+                        }
+                    }, 1400);
+                }
+            })
+            .catch(err => {
+                hideThinkingIndicator();
+                isAwaitingAiResponse = false;
+                // Roll back the history entry since we didn't get a response
+                conversationHistory.pop();
+                const errMsg = typeof err === 'string' ? err : 'שגיאת תקשורת עם השרת. ודא שהשרת פעיל ונסה שוב.';
+                showInlineError(errMsg);
+            });
         });
 
         messageInput.addEventListener('keydown', (e) => {
