@@ -1058,106 +1058,88 @@ STRICT RULES:
         }
 
         function normalizeCustomerSpeechText(text) {
-            const cleaned = String(text || '').replace(/\s+/g, ' ').trim();
-            if (!cleaned) {
-                return '';
-            }
-            if (/[.!?…]$/.test(cleaned)) {
-                return cleaned;
-            }
+            // Strip markdown artifacts that AI occasionally emits.
+            let cleaned = String(text || '')
+                .replace(/\*\*?|#+|_{1,2}|~~|`+/g, '')
+                .replace(/\[\[.*?\]\]/g, '')
+                .replace(/\s+/g, ' ')
+                .trim();
+            if (!cleaned) return '';
+            if (/[.!?…]$/.test(cleaned)) return cleaned;
             return `${cleaned}.`;
         }
 
         function splitSpeechIntoChunks(text) {
             const normalized = normalizeCustomerSpeechText(text);
-            if (!normalized) {
-                return [];
-            }
+            if (!normalized) return [];
 
-            const roughChunks = normalized.match(/[^.!?…,:;]+[.!?…,:;]?/g) || [normalized];
-            const trimmed = roughChunks.map((chunk) => chunk.trim()).filter(Boolean);
+            // Split only on sentence-ending marks — NOT on commas or colons.
+            // Splitting at commas creates unnatural mid-sentence pauses.
+            const roughChunks = normalized.match(/[^.!?…]+[.!?…]?/g) || [normalized];
+            const trimmed = roughChunks.map(c => c.trim()).filter(Boolean);
             const merged = [];
 
-            // Merge very short fragments so speech does not sound choppy.
             for (const chunk of trimmed) {
-                if (merged.length === 0) {
-                    merged.push(chunk);
-                    continue;
-                }
-                const prev = merged[merged.length - 1];
-                if (chunk.length < 12) {
-                    merged[merged.length - 1] = `${prev} ${chunk}`.replace(/\s+/g, ' ').trim();
+                if (merged.length === 0) { merged.push(chunk); continue; }
+                // Merge short tails so speech stays fluid.
+                if (chunk.length < 28) {
+                    merged[merged.length - 1] = `${merged[merged.length - 1]} ${chunk}`.replace(/\s+/g, ' ').trim();
                 } else {
                     merged.push(chunk);
                 }
             }
 
             const pauseForChunk = (chunkText) => {
-                if (/[?]$/.test(chunkText)) return 300;
-                if (/[!]$/.test(chunkText)) return 240;
-                if (/[.…]$/.test(chunkText)) return 320;
-                if (/[,:;]$/.test(chunkText)) return 170;
-                if (/[.]$/.test(chunkText)) return 260;
-                return 140;
+                if (/[?]$/.test(chunkText)) return 180;
+                if (/[!]$/.test(chunkText)) return 140;
+                if (/[.…]$/.test(chunkText)) return 190;
+                return 90;
             };
 
             return merged.map((chunk, index) => ({
                 text: chunk,
-                pauseAfterMs: index === merged.length - 1 ? 120 : pauseForChunk(chunk)
+                pauseAfterMs: index === merged.length - 1 ? 70 : pauseForChunk(chunk)
             }));
         }
 
         function getHumanProsody(text, targetGender, resolvedVoiceGender, speechStyle = null) {
-            const textLength = (text || '').length;
-            let rate = textLength > 110 ? 0.92 : textLength > 75 ? 0.96 : 1;
+            // Hebrew TTS sounds more natural at a slightly faster base rate.
+            let rate = 1.08;
             let pitch = 1;
 
             if (targetGender === 'female') {
-                pitch = 1.08;
+                pitch = 1.10;
             } else if (targetGender === 'male') {
-                pitch = 0.95;
+                pitch = 0.94;
             }
 
-            if ((text || '').includes('!')) {
-                rate += 0.03;
-            }
-            if ((text || '').includes('?')) {
-                rate -= 0.02;
-            }
+            const t = text || '';
+            // Exclamations → faster & higher; questions → slower & rising intonation.
+            if (t.includes('!')) { rate += 0.06; pitch += 0.04; }
+            if (t.includes('?')) { rate -= 0.02; }
+            if (/[?]$/.test(t)) { pitch += 0.08; rate -= 0.02; }
+            else if (/[!]$/.test(t)) { pitch += 0.04; rate += 0.03; }
+            else if (/[.…]$/.test(t)) { rate -= 0.02; }
 
-            if (/[?]$/.test(text || '')) {
-                pitch += 0.06;
-                rate -= 0.01;
-            } else if (/[!]$/.test(text || '')) {
-                pitch += 0.03;
-                rate += 0.02;
-            } else if (/[.…]$/.test(text || '')) {
-                rate -= 0.03;
-            }
+            if (speechStyle?.rateDelta) rate += speechStyle.rateDelta;
+            if (speechStyle?.pitchDelta) pitch += speechStyle.pitchDelta;
 
-            if (speechStyle?.rateDelta) {
-                rate += speechStyle.rateDelta;
-            }
-            if (speechStyle?.pitchDelta) {
-                pitch += speechStyle.pitchDelta;
-            }
-
-            // Soft fallback when only opposite-gender voice exists.
+            // Fallback when only opposite-gender voice exists.
             if (targetGender === 'female' && resolvedVoiceGender !== 'female') {
-                pitch = 1.18;
-                rate = Math.min(rate, 0.97);
+                pitch = 1.22;
+                rate = Math.min(rate, 1.06);
             } else if (targetGender === 'male' && resolvedVoiceGender !== 'male') {
-                pitch = 0.88;
+                pitch = 0.86;
             }
 
-            // Small randomized variation for more natural rhythm.
-            rate += (Math.random() - 0.5) * 0.04;
-            pitch += (Math.random() - 0.5) * 0.06;
+            // Wider randomized variation for more human-sounding rhythm.
+            rate  += (Math.random() - 0.5) * 0.08;
+            pitch += (Math.random() - 0.5) * 0.10;
 
             return {
-                rate: clamp(rate, 0.85, 1.1),
-                pitch: clamp(pitch, 0.75, 1.35),
-                volume: clamp(0.94 + (Math.random() - 0.5) * 0.06, 0.9, 1)
+                rate:   clamp(rate,   0.95, 1.30),
+                pitch:  clamp(pitch,  0.75, 1.45),
+                volume: clamp(0.95 + (Math.random() - 0.5) * 0.06, 0.90, 1)
             };
         }
 
