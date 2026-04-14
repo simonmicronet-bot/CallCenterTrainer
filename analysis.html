@@ -322,6 +322,12 @@
             border-color: #93c5fd;
         }
 
+        .chip-partial {
+            color: #92400e;
+            background: #fed7aa;
+            border-color: #fdba74;
+        }
+
         .target-text {
             color: var(--muted);
             font-size: 0.88rem;
@@ -694,9 +700,16 @@
                     return { chipClass: 'chip-info', text: 'לא הוגדר סקריפט' };
                 const openingOk = !openingScriptConfigured || openingScriptUsed === true;
                 const closingOk = !closingScriptConfigured || closingScriptUsed === true;
-                return openingOk && closingOk
-                    ? { chipClass: 'chip-pass', text: 'עומד בסקריפט' }
-                    : { chipClass: 'chip-fail', text: 'לא עומד בסקריפט' };
+                const matchCount = (openingOk ? 1 : 0) + (closingOk ? 1 : 0);
+                const configCount = (openingScriptConfigured ? 1 : 0) + (closingScriptConfigured ? 1 : 0);
+                
+                if (matchCount === configCount && matchCount > 0) {
+                    return { chipClass: 'chip-pass', text: 'סקריפט תואם' };
+                } else if (matchCount > 0) {
+                    return { chipClass: 'chip-partial', text: 'סקריפט תואם חלקית' };
+                } else {
+                    return { chipClass: 'chip-fail', text: 'סקריפט לא תואם' };
+                }
             })();
             const repeatedIssueState = repeatedIssueCount <= settings.targetMaxRepeatedIssueCount
                 ? { chipClass: 'chip-pass', text: 'עומד ביעד' }
@@ -796,17 +809,31 @@
                         : 'אם היחס גבוה מדי, שאל יותר. אם נמוך מדי, הובל יותר את השיחה והצע צעדים ברורים.')
                     : 'המשך שיחה עם יותר חילופי מסרים כדי למדוד איזון שיח.'
             );
+            const getScriptFeedbackDetails = (() => {
+                if (!openingScriptConfigured && !closingScriptConfigured)
+                    return { analysis: 'לא הוגדר סקריפט ולכן המדד לא בדק עמידה בנוסח פתיחה/סגירה.', recommendation: 'הגדר סקריפט בדף ההגדרות כדי להפוך את המדד לאפקטיבי.' };
+                
+                const openingMatches = !openingScriptConfigured || openingScriptUsed === true;
+                const closingMatches = !closingScriptConfigured || closingScriptUsed === true;
+                
+                if (openingMatches && closingMatches)
+                    return { analysis: `הפתיחה והסגירה תאמו את הסקריפט הנדרש ולכן נשמר סטנדרט ארגוני עקבי. ${domainFeedback.analysis}`, recommendation: `המשך לפתוח ולסגור שיחות בנוסח קבוע, במיוחד כשמדובר בשיחות לחץ. ${domainFeedback.recommendation}` };
+                
+                if (!openingMatches && !closingMatches)
+                    return { analysis: `הסוכן טעה בילה סקריפט הפתיחה וגם סקריפט הסגירה, ולכן נפגעה האחידות המקצועית לחלוטין. ${domainFeedback.analysis}`, recommendation: `תרגל שוב את משפטי הפתיחה והסגירה המדויקים עד שהם יוצאים טבעי בזמן אמת. ${domainFeedback.recommendation}` };
+                
+                if (!openingMatches)
+                    return { analysis: `סקריפט הפתיחה לא תואם - הסוכן סטה מהנוסח המקובל בתחילת השיחה. ${domainFeedback.analysis}`, recommendation: `תרגל את משפט הפתיחה המדויק עד שיהיה טבעי וממוטט. ${domainFeedback.recommendation}` };
+                
+                if (!closingMatches)
+                    return { analysis: `סקריפט הסגירה לא תואם - הסוכן לא עמד בנוסח הנדרש בסיום השיחה. ${domainFeedback.analysis}`, recommendation: `זכור לרכוז את סגירת השיחה בנוסח קבוע: תיקוף, סיכום, הצעת עזרה נוספת וברכה. ${domainFeedback.recommendation}` };
+                
+                return { analysis: '', recommendation: '' };
+            })();
+            
             const scriptFeedback = renderMetricFeedback(
-                scriptState.chipClass === 'chip-pass'
-                    ? `הפתיחה והסגירה תאמו את הסקריפט הנדרש ולכן נשמר סטנדרט ארגוני עקבי. ${domainFeedback.analysis}`
-                    : scriptState.chipClass === 'chip-info'
-                        ? 'לא הוגדר סקריפט ולכן המדד לא בדק עמידה בנוסח פתיחה/סגירה.'
-                        : `הייתה חריגה מהסקריפט המוגדר בפתיחה או בסגירה, ולכן נפגעה האחידות המקצועית. ${domainFeedback.analysis}`,
-                scriptState.chipClass === 'chip-pass'
-                    ? `המשך לפתוח ולסגור שיחות בנוסח קבוע, במיוחד כשמדובר בשיחות לחץ. ${domainFeedback.recommendation}`
-                    : scriptState.chipClass === 'chip-info'
-                        ? 'הגדר סקריפט בדף ההגדרות כדי להפוך את המדד לאפקטיבי.'
-                        : `תרגל את משפט הפתיחה והסגירה המדויקים עד שהם יוצאים טבעי גם בזמן אמת. ${domainFeedback.recommendation}`
+                getScriptFeedbackDetails.analysis,
+                getScriptFeedbackDetails.recommendation
             );
             const repeatedIssueFeedback = renderMetricFeedback(
                 repeatedIssueState.chipClass === 'chip-pass'
