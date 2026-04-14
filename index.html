@@ -1,0 +1,2757 @@
+﻿<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>סימולציית שיחה עם לקוח AI</title>
+    <style>
+        :root {
+            --bg: #eef3f7;
+            --surface: #ffffff;
+            --text: #1f2937;
+            --muted: #6b7280;
+            --primary: #2563eb;
+            --primary-soft: #dbeafe;
+            --border: rgba(15, 23, 42, 0.08);
+            --shadow: 0 20px 50px rgba(15, 23, 42, 0.08);
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            min-height: 100vh;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            color: var(--text);
+            background: linear-gradient(180deg, #eef3f7 0%, #f8fafc 100%);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 24px;
+        }
+
+        .page {
+            width: min(100%, 760px);
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 28px;
+            box-shadow: var(--shadow);
+            overflow: hidden;
+        }
+
+        .header {
+            padding: 80px 32px 20px;
+            background: #ffffff;
+            border-bottom: 1px solid var(--border);
+            position: relative;
+        }
+
+        .header h1 {
+            margin: 0;
+            font-size: 1.8rem;
+            letter-spacing: 0.01em;
+        }
+
+        .header p {
+            margin: 10px 0 0;
+            color: var(--muted);
+            line-height: 1.6;
+        }
+
+        .top-logo {
+            position: absolute;
+            top: 16px;
+            left: 16px;
+            width: 96px;
+            height: 96px;
+            object-fit: contain;
+        }
+
+        .home-link {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            padding: 8px 16px;
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            background: #f8fafc;
+            color: var(--text);
+            text-decoration: none;
+            font-size: 0.9rem;
+            transition: all 0.2s ease;
+        }
+
+        .home-link:hover {
+            background: var(--primary-soft);
+            border-color: var(--primary);
+            color: var(--primary);
+        }
+
+        .navigation {
+            display: flex;
+            gap: 12px;
+            padding: 0 0 20px;
+        }
+
+        .nav-btn {
+            padding: 8px 14px;
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            background: #f8fafc;
+            color: var(--text);
+            text-decoration: none;
+            font-size: 0.9rem;
+            transition: all 0.2s ease;
+        }
+
+        .nav-btn:hover {
+            background: var(--primary-soft);
+            border-color: var(--primary);
+            color: var(--primary);
+        }
+
+        .nav-btn.active {
+            background: var(--primary);
+            color: #ffffff;
+            border-color: var(--primary);
+        }
+
+        .status-row {
+            margin-top: 18px;
+            display: grid;
+            gap: 12px;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            background: #f8fafc;
+            border: 1px solid rgba(37, 99, 235, 0.12);
+            border-radius: 18px;
+            padding: 16px 20px;
+        }
+
+        .status-row span {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            color: var(--text);
+            font-size: 0.95rem;
+            font-weight: 600;
+        }
+
+        .status-dot {
+            width: 18px;
+            height: 18px;
+            display: inline-block;
+            flex-shrink: 0;
+        }
+
+        .status-idle {
+            color: #9ca3af;
+        }
+
+        .status-active {
+            color: #22c55e;
+        }
+
+        .status-disconnected {
+            color: #ef4444;
+        }
+
+        .controls {
+            display: grid;
+            gap: 16px;
+            padding: 20px 32px;
+        }
+
+        .analysis-btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 52px;
+            height: 48px;
+            min-width: 52px;
+            padding: 0;
+            border-radius: 14px;
+            border: 2px solid #1d4ed8;
+            background: linear-gradient(180deg, #f8fbff 0%, #dbeafe 100%);
+            color: #1e3a8a;
+            text-decoration: none;
+            box-shadow: 0 8px 18px rgba(37, 99, 235, 0.18);
+            flex: 0 0 52px;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .analysis-btn svg {
+            width: 24px;
+            height: 24px;
+            stroke: currentColor;
+        }
+
+        .analysis-btn.is-disabled {
+            opacity: 0.7;
+            cursor: not-allowed;
+            pointer-events: none;
+            background: linear-gradient(180deg, #f8fafc 0%, #e2e8f0 100%);
+            border-color: #94a3b8;
+            color: #64748b;
+            box-shadow: none;
+        }
+
+        .analysis-btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 10px 22px rgba(37, 99, 235, 0.24);
+        }
+
+        .controls-row {
+            display: grid;
+            gap: 12px;
+            grid-template-columns: minmax(150px, 190px) minmax(150px, 190px) minmax(160px, 200px);
+            align-items: end;
+        }
+
+        .controls-actions {
+            display: flex;
+            gap: 12px;
+            align-items: end;
+        }
+
+        .controls-actions .analysis-btn {
+            margin-right: 92px;
+            margin-left: 10px;
+        }
+
+        .controls-row > div {
+            display: grid;
+            gap: 8px;
+        }
+
+        .controls label {
+            margin-bottom: 6px;
+        }
+
+        .controls select {
+            width: 100%;
+            max-width: 220px;
+            padding: 12px 14px;
+            font-size: 0.95rem;
+        }
+
+        .agent-name-input {
+            max-width: 240px;
+        }
+
+        .controls button {
+            min-width: 160px;
+            width: 100%;
+        }
+
+        .controls-actions #startBtn,
+        .controls-actions #endBtn {
+            width: 160px;
+            min-width: 160px;
+            flex: 0 0 160px;
+        }
+
+        button {
+            border: none;
+            border-radius: 16px;
+            padding: 14px 18px;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: transform 0.2s ease, box-shadow 0.2s ease, opacity 0.2s ease;
+        }
+
+        label {
+            color: var(--muted);
+            font-size: 0.95rem;
+            display: block;
+            margin-bottom: 8px;
+        }
+
+        select,
+        input[type="text"] {
+            width: 100%;
+            border: 1px solid rgba(15, 23, 42, 0.12);
+            border-radius: 16px;
+            padding: 14px 16px;
+            font-size: 1rem;
+            background: #f8fafc;
+            color: var(--text);
+            transition: border-color 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        select:focus,
+        input[type="text"]:focus {
+            outline: none;
+            border-color: rgba(37, 99, 235, 0.7);
+            box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.12);
+            background: #ffffff;
+        }
+
+        button {
+            border: none;
+            border-radius: 16px;
+            padding: 14px 18px;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: transform 0.2s ease, box-shadow 0.2s ease, opacity 0.2s ease;
+        }
+
+        button:hover:not(:disabled) {
+            transform: translateY(-1px);
+            box-shadow: 0 10px 24px rgba(37, 99, 235, 0.16);
+        }
+
+        button:disabled {
+            opacity: 0.55;
+            cursor: not-allowed;
+        }
+
+        #startBtn {
+            background: #16a34a;
+            color: #ffffff;
+        }
+
+        #endBtn {
+            background: #ef4444;
+            color: #ffffff;
+        }
+
+        #sendBtn {
+            background: #10b981;
+            color: #ffffff;
+            width: 140px;
+            min-width: 120px;
+            padding: 12px 16px;
+        }
+
+        #voiceBtn {
+            background: #0ea5e9;
+            color: #ffffff;
+            width: 140px;
+            min-width: 120px;
+            padding: 12px 16px;
+        }
+
+        #voiceBtn.voice-listening {
+            background: #f59e0b;
+        }
+
+        #chatWrapper {
+            padding: 24px 32px 16px;
+        }
+
+        #chat {
+            min-height: 320px;
+            max-height: 420px;
+            overflow-y: auto;
+            padding: 20px;
+            border-radius: 24px;
+            border: 1px solid rgba(15, 23, 42, 0.08);
+            background: #f8fafc;
+        }
+
+        .message {
+            margin-bottom: 14px;
+            padding: 14px 18px;
+            border-radius: 18px;
+            max-width: 85%;
+            line-height: 1.6;
+            box-shadow: 0 2px 10px rgba(15, 23, 42, 0.04);
+        }
+
+        .user {
+            margin-inline-start: auto;
+            background: #2563eb;
+            color: #ffffff;
+            text-align: right;
+        }
+
+        .agent {
+            margin-inline-end: auto;
+            background: #ffffff;
+            color: var(--text);
+        }
+
+        .system {
+            text-align: center;
+            color: var(--muted);
+            margin: 16px 0 0;
+        }
+
+        .input-row {
+            display: grid;
+            gap: 14px;
+            grid-template-columns: 1fr auto auto;
+            padding: 0 32px 32px;
+            align-items: center;
+        }
+
+        @media (max-width: 640px) {
+            .controls-row,
+            .controls,
+            .input-row {
+                grid-template-columns: 1fr;
+            }
+
+            .controls-actions {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .controls-actions .analysis-btn {
+                margin-right: 0;
+            }
+
+            #sendBtn,
+            #voiceBtn {
+                grid-column: span 1;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="page">
+        <div class="header">
+            <img src="logo.png" alt="Logo" class="top-logo">
+            <a href="home.html" class="home-link">דף ראשי</a>
+            <h1>סימולציית שיחה עם לקוח AI</h1>
+            <p>בחר את התחום המקצועי והתחל תרחיש לקוחות עם פרופיל רנדומלי לגימור מקצועי.</p>
+            <div class="status-row" id="statusBanner">
+                <span>
+                    <svg id="statusIcon" class="status-dot status-idle" viewBox="0 0 24 24" aria-hidden="true">
+                        <path d="M4 13v5a2 2 0 0 0 2 2h1v-8H6a2 2 0 0 0-2 2zm16 0v5a2 2 0 0 1-2 2h-1v-8h1a2 2 0 0 1 2 2zM5 12a7 7 0 0 1 14 0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                    <span id="statusText">מוכן להפעלה</span>
+                </span>
+                <span id="statusType"></span>
+            </div>
+        </div>
+        <div class="controls">
+            <div class="controls-row">
+                <div>
+                    <label for="conversationType">בחר תחום מקצועי</label>
+                    <select id="conversationType">
+                        <option value="sales">מכירה</option>
+                        <option value="service">שרות</option>
+                        <option value="technical">טכני</option>
+                    </select>
+                </div>
+                <div>
+                    <label for="difficultyLevel">🎯 רמת קושי</label>
+                    <select id="difficultyLevel">
+                        <option value="basic">בסיסי</option>
+                        <option value="intermediate">בינוני</option>
+                        <option value="advanced">מתקדם</option>
+                    </select>
+                </div>
+                <div>
+                    <label for="agentFirstName">👤 שם הסוכן</label>
+                    <input type="text" id="agentFirstName" class="agent-name-input" placeholder="הזן שם פרטי" maxlength="30" autocomplete="off">
+                </div>
+            </div>
+            <div class="controls-actions">
+                <button id="startBtn">התחל שיחה</button>
+                <button id="endBtn" disabled>סיים שיחה</button>
+                <a id="analysisBtn" class="analysis-btn is-disabled" href="analysis.html" aria-label="צפה בניתוח השיחה האחרונה" title="צפה בניתוח השיחה האחרונה" aria-disabled="true" tabindex="-1">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <path d="M3 3v18h18"/>
+                        <path d="M7 15l4-4 3 3 5-6"/>
+                    </svg>
+                </a>
+            </div>
+        </div>
+        <div id="chatWrapper">
+            <div id="chat"></div>
+        </div>
+        <div class="input-row">
+            <input type="text" id="messageInput" placeholder="הקלד הודעה..." disabled>
+            <button id="sendBtn" disabled>שלח</button>
+            <button id="voiceBtn" disabled>🎤 דבר</button>
+        </div>
+    </div>
+
+    <script>
+        const chat = document.getElementById('chat');
+        const messageInput = document.getElementById('messageInput');
+        const sendBtn = document.getElementById('sendBtn');
+        const voiceBtn = document.getElementById('voiceBtn');
+        const startBtn = document.getElementById('startBtn');
+        const endBtn = document.getElementById('endBtn');
+        const analysisBtn = document.getElementById('analysisBtn');
+        const conversationType = document.getElementById('conversationType');
+        const difficultyLevel = document.getElementById('difficultyLevel');
+        const agentFirstNameInput = document.getElementById('agentFirstName');
+        const statusIcon = document.getElementById('statusIcon');
+        const statusText = document.getElementById('statusText');
+        const statusType = document.getElementById('statusType');
+        let currentLanguage = localStorage.getItem('appLanguage') || 'he';
+
+        const analysisResultsKey = 'lastConversationAnalysis';
+        const maleCustomerNames = ['אליהו', 'בנימין', 'גילעד', 'דרור', 'זכריה', 'חיים', 'טוביה', 'יניב', 'ליאון', 'מורדי', 'נמרוד', 'ערן', 'ציון', 'רמי', 'תמיר'];
+        const femaleCustomerNames = ['אורית', 'בתיה', 'גלית', 'דורית', 'ורד', 'זהבית', 'חגית', 'יונית', 'כלנית', 'מירית', 'נורית', 'סימה', 'ענת', 'פזית', 'ציונה', 'רונית', 'תהילה'];
+        const maleCustomerNamesEn = ['James', 'Robert', 'Michael', 'David', 'William', 'Richard', 'Joseph', 'Thomas', 'Daniel', 'Mark', 'Paul', 'Steven', 'Kevin', 'Brian', 'Scott'];
+        const femaleCustomerNamesEn = ['Mary', 'Patricia', 'Jennifer', 'Linda', 'Barbara', 'Elizabeth', 'Susan', 'Jessica', 'Sarah', 'Karen', 'Lisa', 'Nancy', 'Betty', 'Margaret', 'Sandra'];
+
+        const UI_STRINGS = {
+            statusReady: 'מוכן להפעלה',
+            statusActive: 'שיחה פעילה',
+            statusDisconnected: 'השיחה נותקה',
+            statusDomain: 'תחום מקצועי',
+            statusCallType: 'סוג שיחה',
+            statusLevel: 'רמה',
+            statusMode: 'מצב',
+            btnSpeak: '🎤 דבר',
+            btnStopSpeak: '⏹ עצור דיבור',
+            btnNotSupported: '🎤 לא נתמך',
+            alertNoName: 'יש להזין את שם הסוכן לפני התחלת השיחה.',
+            youPrefix: 'אתה',
+            incomingSystemMsg: 'השיחה חוברה. זהו תרחיש של שיחה נכנסת, הסוכן פותח ראשון.',
+            disconnectedMsg: 'השיחה נותקה.',
+            modeCalm: 'רגוע',
+            modeBalanced: 'מאוזן',
+            modeTense: 'לחוץ',
+            modeAuto: 'אוטומטי',
+            diffBasic: 'בסיסי',
+            diffIntermediate: 'בינוני',
+            diffAdvanced: 'מתקדם',
+            dirIncoming: 'שיחה נכנסת',
+            dirOutgoing: 'שיחה יוצאת',
+            dirIncomingShort: 'נכנסת',
+            dirOutgoingShort: 'יוצאת',
+            domainSales: 'מכירה',
+            domainService: 'שרות',
+            domainTechnical: 'טכני'
+        };
+
+        function S(key) {
+            return UI_STRINGS[key] || key;
+        }
+
+        function loadConversationModeSetting() {
+            return localStorage.getItem('conversationMode') || 'auto';
+        }
+
+        let conversationStarted = false;
+        let currentScenario = null;
+        let inactivityTimer = null;
+        let disconnectTimer = null;
+        let conversationStartTimestamp = null;
+        let pendingCustomerMessageTimestamp = null;
+        let agentResponseDurationsMs = [];
+        let lastAgentMessageTimestamp = null;
+        let longestAgentGapMs = 0;
+        let politenessCount = 0;
+        let nameAddressCount = 0;
+        let longPauseCount = 0;
+        let agentMessageCount = 0;
+        let customerMessageCount = 0;
+        let repeatedIssueCount = 0;
+        let currentAgentFirstName = '';
+        let detectedAgentName = '';
+        let agentFirstMessage = null;
+        let agentLastMessage = '';
+        let openingScriptUsed = false;
+        let closingScriptUsed = false;
+        let offeredAdditionalHelp = false;
+        let customerIdentificationRequested = false;
+        let customerIssueOccurrences = new Map();
+        let customerSpeechEnabled = true;
+        let customerVoiceDebugMode = false;
+        let noFemaleVoiceWarningShown = false;
+        let cachedTTSVoices = [];
+        let selectedCustomerVoices = { male: null, female: null, neutral: null };
+
+        function setAnalysisButtonEnabled(enabled) {
+            analysisBtn.classList.toggle('is-disabled', !enabled);
+            analysisBtn.setAttribute('aria-disabled', enabled ? 'false' : 'true');
+            analysisBtn.tabIndex = enabled ? 0 : -1;
+        }
+
+        analysisBtn.addEventListener('click', (event) => {
+            if (analysisBtn.classList.contains('is-disabled')) {
+                event.preventDefault();
+            }
+        });
+
+        function initTTSVoices() {
+            if (!('speechSynthesis' in window)) return;
+            const load = () => {
+                const v = window.speechSynthesis.getVoices();
+                if (v.length > 0) {
+                    cachedTTSVoices = v;
+                    selectedCustomerVoices = { male: null, female: null, neutral: null };
+                }
+            };
+            load();
+            window.speechSynthesis.addEventListener('voiceschanged', () => {
+                cachedTTSVoices = window.speechSynthesis.getVoices();
+                selectedCustomerVoices = { male: null, female: null, neutral: null };
+            });
+        }
+        initTTSVoices();
+        let activeCustomerUtterance = null;
+        let pendingCustomerDisconnect = null;
+        let isCustomerSpeechPlaying = false;
+        let customerSpeechQueue = [];
+        let stopActiveDialTone = null;
+        const SpeechRecognitionClass = window.SpeechRecognition || window.webkitSpeechRecognition || null;
+        let agentSpeechRecognition = null;
+        let isAgentVoiceListening = false;
+        let agentVoiceHasCapturedText = false;
+        let isAgentVoiceSessionActive = false;
+        let agentVoiceSilenceTimer = null;
+        let shouldFinalizeAgentVoiceSession = false;
+        const AGENT_VOICE_SILENCE_MS = 2000;
+
+        function clearAgentVoiceSilenceTimer() {
+            if (agentVoiceSilenceTimer) {
+                clearTimeout(agentVoiceSilenceTimer);
+                agentVoiceSilenceTimer = null;
+            }
+        }
+
+        function finishAgentVoiceSession(shouldSendMessage) {
+            clearAgentVoiceSilenceTimer();
+            isAgentVoiceSessionActive = false;
+            shouldFinalizeAgentVoiceSession = false;
+            isAgentVoiceListening = false;
+            updateVoiceButtonState();
+
+            if (shouldSendMessage && conversationStarted && agentVoiceHasCapturedText && messageInput.value.trim()) {
+                sendBtn.click();
+            }
+            messageInput.focus();
+        }
+
+        function scheduleAgentVoiceSilenceStop() {
+            clearAgentVoiceSilenceTimer();
+            agentVoiceSilenceTimer = setTimeout(() => {
+                shouldFinalizeAgentVoiceSession = true;
+                stopAgentVoiceInput(true);
+            }, AGENT_VOICE_SILENCE_MS);
+        }
+
+        function updateVoiceButtonState() {
+            if (!SpeechRecognitionClass) {
+                voiceBtn.textContent = S('btnNotSupported');
+                voiceBtn.disabled = true;
+                voiceBtn.classList.remove('voice-listening');
+                return;
+            }
+
+            const isActive = isAgentVoiceListening || isAgentVoiceSessionActive;
+            voiceBtn.textContent = isActive ? S('btnStopSpeak') : S('btnSpeak');
+            voiceBtn.classList.toggle('voice-listening', isActive);
+        }
+
+        function playOutgoingDialTone(durationMs = 3000) {
+            if (stopActiveDialTone) {
+                stopActiveDialTone();
+                stopActiveDialTone = null;
+            }
+
+            return new Promise((resolve) => {
+                const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+                if (!AudioContextClass) {
+                    const fallbackTimer = setTimeout(() => {
+                        stopActiveDialTone = null;
+                        resolve();
+                    }, durationMs);
+                    stopActiveDialTone = () => {
+                        clearTimeout(fallbackTimer);
+                        stopActiveDialTone = null;
+                        resolve();
+                    };
+                    return;
+                }
+
+                const audioContext = new AudioContextClass();
+                const gainNode = audioContext.createGain();
+                gainNode.gain.value = 0;
+                gainNode.connect(audioContext.destination);
+
+                const toneA = audioContext.createOscillator();
+                const toneB = audioContext.createOscillator();
+                toneA.type = 'sine';
+                toneB.type = 'sine';
+                toneA.frequency.value = 425;
+                toneB.frequency.value = 475;
+                toneA.connect(gainNode);
+                toneB.connect(gainNode);
+                toneA.start();
+                toneB.start();
+
+                const startAt = audioContext.currentTime;
+                const endAt = startAt + durationMs / 1000;
+                let cursor = startAt;
+
+                // Ring cadence: slower "ring... pause... ring" pattern.
+                const ringOnSeconds = 0.72;
+                const ringOffSeconds = 0.68;
+                while (cursor < endAt) {
+                    const ringStart = cursor;
+                    const ringEnd = Math.min(endAt, ringStart + ringOnSeconds);
+
+                    gainNode.gain.setValueAtTime(0.0001, ringStart);
+                    gainNode.gain.linearRampToValueAtTime(0.065, Math.min(ringEnd, ringStart + 0.03));
+                    gainNode.gain.setValueAtTime(0.065, ringEnd);
+                    gainNode.gain.linearRampToValueAtTime(0.0001, Math.min(endAt, ringEnd + 0.04));
+
+                    cursor = ringStart + ringOnSeconds + ringOffSeconds;
+                }
+
+                let completed = false;
+                const cleanup = () => {
+                    if (completed) {
+                        return;
+                    }
+                    completed = true;
+                    try {
+                        gainNode.gain.cancelScheduledValues(audioContext.currentTime);
+                        gainNode.gain.setValueAtTime(0.0001, audioContext.currentTime);
+                        toneA.stop();
+                        toneB.stop();
+                    } catch (error) {
+                        // Ignore cleanup races.
+                    }
+                    audioContext.close().catch(() => {});
+                    stopActiveDialTone = null;
+                    resolve();
+                };
+
+                const timer = setTimeout(cleanup, durationMs);
+                stopActiveDialTone = () => {
+                    clearTimeout(timer);
+                    cleanup();
+                };
+            });
+        }
+
+        function initializeAgentVoiceInput() {
+            if (!SpeechRecognitionClass) {
+                updateVoiceButtonState();
+                return;
+            }
+
+            agentSpeechRecognition = new SpeechRecognitionClass();
+            agentSpeechRecognition.lang = currentLanguage === 'en' ? 'en-US' : 'he-IL';
+            agentSpeechRecognition.interimResults = true;
+            agentSpeechRecognition.continuous = true;
+            agentSpeechRecognition.maxAlternatives = 1;
+
+            agentSpeechRecognition.onstart = () => {
+                isAgentVoiceListening = true;
+                isAgentVoiceSessionActive = true;
+                updateVoiceButtonState();
+            };
+
+            agentSpeechRecognition.onresult = (event) => {
+                let finalTranscript = '';
+                let interimTranscript = '';
+
+                for (let i = event.resultIndex; i < event.results.length; i += 1) {
+                    const piece = event.results[i][0]?.transcript || '';
+                    if (event.results[i].isFinal) {
+                        finalTranscript += piece + ' ';
+                    } else {
+                        interimTranscript += piece + ' ';
+                    }
+                }
+
+                const combinedText = `${finalTranscript}${interimTranscript}`.trim();
+                if (combinedText) {
+                    messageInput.value = combinedText;
+                    agentVoiceHasCapturedText = true;
+                    scheduleAgentVoiceSilenceStop();
+                }
+            };
+
+            agentSpeechRecognition.onend = () => {
+                isAgentVoiceListening = false;
+                if (shouldFinalizeAgentVoiceSession) {
+                    finishAgentVoiceSession(true);
+                    return;
+                }
+
+                if (isAgentVoiceSessionActive && conversationStarted) {
+                    try {
+                        agentSpeechRecognition.start();
+                    } catch (_err) {
+                        finishAgentVoiceSession(false);
+                    }
+                    return;
+                }
+
+                finishAgentVoiceSession(false);
+            };
+
+            agentSpeechRecognition.onerror = () => {
+                isAgentVoiceListening = false;
+                if (shouldFinalizeAgentVoiceSession) {
+                    finishAgentVoiceSession(true);
+                    return;
+                }
+
+                if (isAgentVoiceSessionActive && conversationStarted) {
+                    try {
+                        agentSpeechRecognition.start();
+                    } catch (_err) {
+                        finishAgentVoiceSession(false);
+                    }
+                    return;
+                }
+
+                finishAgentVoiceSession(false);
+            };
+
+            updateVoiceButtonState();
+        }
+
+        function stopAgentVoiceInput(shouldSendMessage = false) {
+            shouldFinalizeAgentVoiceSession = shouldSendMessage;
+            clearAgentVoiceSilenceTimer();
+
+            if (!agentSpeechRecognition) {
+                finishAgentVoiceSession(shouldSendMessage);
+                return;
+            }
+
+            if (isAgentVoiceListening) {
+                agentSpeechRecognition.stop();
+                return;
+            }
+
+            finishAgentVoiceSession(shouldSendMessage);
+        }
+
+        function toggleAgentVoiceInput() {
+            if (!conversationStarted) {
+                return;
+            }
+            if (!agentSpeechRecognition) {
+                return;
+            }
+
+            if (isAgentVoiceListening || isAgentVoiceSessionActive) {
+                stopAgentVoiceInput(true);
+                return;
+            }
+
+            agentVoiceHasCapturedText = false;
+            shouldFinalizeAgentVoiceSession = false;
+            isAgentVoiceSessionActive = true;
+            try {
+                agentSpeechRecognition.start();
+            } catch (_err) {
+                finishAgentVoiceSession(false);
+            }
+        }
+
+        function getCustomerMessageBody(text) {
+            return text.replace(/^(?:לקוח(?:ה)?|Customer)\s*:\s*/, '').trim();
+        }
+
+        function inferCustomerGenderFromText(text) {
+            if (/^לקוחה\s*:/.test(text)) {
+                return 'female';
+            }
+            if (/^לקוח\s*:/.test(text)) {
+                return 'male';
+            }
+            return currentScenario?.gender || 'neutral';
+        }
+
+        function guessVoiceGender(voice) {
+            const voiceName = (voice?.name || '').toLowerCase();
+            const femaleHints = ['female', 'woman', 'girl', 'hila', 'noa', 'noya', 'sara', 'katya', 'zira', 'aria', 'jenny', 'ava', 'libby', 'naama', 'miriam', 'efrat', 'hadar', 'carmit', 'tami', 'tamar', 'rachel', 'reli', 'ayelet', 'lior', 'נעמה', 'נקבה', 'אישה', 'אשה', 'מרים', 'אפרת', 'הדר'];
+            const maleHints = ['male', 'man', 'boy', 'asaf', 'david', 'avi', 'heami', 'guy', 'ryan', 'dan', 'avri', 'elan', 'יצחק', 'דן', 'זכר', 'גבר'];
+
+            if (femaleHints.some(hint => voiceName.includes(hint))) {
+                return 'female';
+            }
+            if (maleHints.some(hint => voiceName.includes(hint))) {
+                return 'male';
+            }
+            return 'neutral';
+        }
+
+        function isHebrewVoice(voice) {
+            return /he[-_]?il|he[-_]/i.test(voice?.lang || '') || /hebrew|עבר/i.test(voice?.name || '');
+        }
+
+        function isTargetLanguageVoice(voice) {
+            if (currentLanguage === 'en') {
+                return /^en[-_]/i.test(voice?.lang || '');
+            }
+            return isHebrewVoice(voice);
+        }
+
+        function isLikelyLocalVoice(voice) {
+            const name = (voice?.name || '').toLowerCase();
+            return name.includes('microsoft') || name.includes('desktop') || name.includes('local');
+        }
+
+        function clamp(value, min, max) {
+            return Math.min(max, Math.max(min, value));
+        }
+
+        function normalizeCustomerSpeechText(text) {
+            const cleaned = String(text || '').replace(/\s+/g, ' ').trim();
+            if (!cleaned) {
+                return '';
+            }
+            if (/[.!?…]$/.test(cleaned)) {
+                return cleaned;
+            }
+            return `${cleaned}.`;
+        }
+
+        function splitSpeechIntoChunks(text) {
+            const normalized = normalizeCustomerSpeechText(text);
+            if (!normalized) {
+                return [];
+            }
+
+            const roughChunks = normalized.match(/[^.!?…,:;]+[.!?…,:;]?/g) || [normalized];
+            const trimmed = roughChunks.map((chunk) => chunk.trim()).filter(Boolean);
+            const merged = [];
+
+            // Merge very short fragments so speech does not sound choppy.
+            for (const chunk of trimmed) {
+                if (merged.length === 0) {
+                    merged.push(chunk);
+                    continue;
+                }
+                const prev = merged[merged.length - 1];
+                if (chunk.length < 12) {
+                    merged[merged.length - 1] = `${prev} ${chunk}`.replace(/\s+/g, ' ').trim();
+                } else {
+                    merged.push(chunk);
+                }
+            }
+
+            const pauseForChunk = (chunkText) => {
+                if (/[?]$/.test(chunkText)) return 300;
+                if (/[!]$/.test(chunkText)) return 240;
+                if (/[.…]$/.test(chunkText)) return 320;
+                if (/[,:;]$/.test(chunkText)) return 170;
+                if (/[.]$/.test(chunkText)) return 260;
+                return 140;
+            };
+
+            return merged.map((chunk, index) => ({
+                text: chunk,
+                pauseAfterMs: index === merged.length - 1 ? 120 : pauseForChunk(chunk)
+            }));
+        }
+
+        function getHumanProsody(text, targetGender, resolvedVoiceGender, speechStyle = null) {
+            const textLength = (text || '').length;
+            let rate = textLength > 110 ? 0.92 : textLength > 75 ? 0.96 : 1;
+            let pitch = 1;
+
+            if (targetGender === 'female') {
+                pitch = 1.08;
+            } else if (targetGender === 'male') {
+                pitch = 0.95;
+            }
+
+            if ((text || '').includes('!')) {
+                rate += 0.03;
+            }
+            if ((text || '').includes('?')) {
+                rate -= 0.02;
+            }
+
+            if (/[?]$/.test(text || '')) {
+                pitch += 0.06;
+                rate -= 0.01;
+            } else if (/[!]$/.test(text || '')) {
+                pitch += 0.03;
+                rate += 0.02;
+            } else if (/[.…]$/.test(text || '')) {
+                rate -= 0.03;
+            }
+
+            if (speechStyle?.rateDelta) {
+                rate += speechStyle.rateDelta;
+            }
+            if (speechStyle?.pitchDelta) {
+                pitch += speechStyle.pitchDelta;
+            }
+
+            // Soft fallback when only opposite-gender voice exists.
+            if (targetGender === 'female' && resolvedVoiceGender !== 'female') {
+                pitch = 1.18;
+                rate = Math.min(rate, 0.97);
+            } else if (targetGender === 'male' && resolvedVoiceGender !== 'male') {
+                pitch = 0.88;
+            }
+
+            // Small randomized variation for more natural rhythm.
+            rate += (Math.random() - 0.5) * 0.04;
+            pitch += (Math.random() - 0.5) * 0.06;
+
+            return {
+                rate: clamp(rate, 0.85, 1.1),
+                pitch: clamp(pitch, 0.75, 1.35),
+                volume: clamp(0.94 + (Math.random() - 0.5) * 0.06, 0.9, 1)
+            };
+        }
+
+        function findCustomerVoice(targetGender = 'neutral') {
+            if (!('speechSynthesis' in window)) {
+                return null;
+            }
+
+            const voices = cachedTTSVoices.length > 0 ? cachedTTSVoices : (window.speechSynthesis.getVoices() || []);
+            const targetVoices = voices.filter((voice) => isTargetLanguageVoice(voice));
+            const scopedVoices = targetVoices.length > 0 ? targetVoices : voices;
+
+            const findByGender = (pool, gender) => pool.find((voice) => guessVoiceGender(voice) === gender) || null;
+
+            if (targetGender === 'female') {
+                return findByGender(targetVoices, 'female')
+                    || targetVoices[0]
+                    || findByGender(voices, 'female')
+                    || voices[0]
+                    || null;
+            }
+
+            if (targetGender === 'male') {
+                return findByGender(targetVoices, 'male')
+                    || targetVoices[0]
+                    || findByGender(voices, 'male')
+                    || voices[0]
+                    || null;
+            }
+
+            return scopedVoices[0]
+                || null;
+        }
+
+        function resolveCustomerVoice(gender) {
+            const normalizedGender = gender === 'female' ? 'female' : gender === 'male' ? 'male' : 'neutral';
+            const voices = cachedTTSVoices.length > 0 ? cachedTTSVoices : (window.speechSynthesis.getVoices() || []);
+            const hasHebrewVoices = voices.some((voice) => isTargetLanguageVoice(voice));
+            if (hasHebrewVoices && selectedCustomerVoices[normalizedGender] && !isTargetLanguageVoice(selectedCustomerVoices[normalizedGender])) {
+                selectedCustomerVoices[normalizedGender] = null;
+            }
+            if (selectedCustomerVoices[normalizedGender]
+                && guessVoiceGender(selectedCustomerVoices[normalizedGender]) !== normalizedGender
+                && guessVoiceGender(findCustomerVoice(normalizedGender)) === normalizedGender) {
+                selectedCustomerVoices[normalizedGender] = null;
+            }
+            if (!selectedCustomerVoices[normalizedGender]) {
+                selectedCustomerVoices[normalizedGender] = findCustomerVoice(normalizedGender)
+                    || findCustomerVoice('neutral');
+            }
+            return selectedCustomerVoices[normalizedGender]
+                || selectedCustomerVoices.neutral
+                || findCustomerVoice('neutral');
+        }
+
+        function tryPlayNextCustomerMessage() {
+            if (!customerSpeechEnabled || !('speechSynthesis' in window)) {
+                return;
+            }
+
+            if (isCustomerSpeechPlaying) {
+                return;
+            }
+
+            if (customerSpeechQueue.length === 0) {
+                if (pendingCustomerDisconnect && conversationStarted) {
+                    const deferred = pendingCustomerDisconnect;
+                    pendingCustomerDisconnect = null;
+                    finalizeConversation(deferred.disconnectedBy, deferred.systemMessage);
+                }
+                return;
+            }
+
+            const nextMessage = customerSpeechQueue.shift();
+            if (!nextMessage?.text) {
+                tryPlayNextCustomerMessage();
+                return;
+            }
+
+            const utterance = new SpeechSynthesisUtterance(nextMessage.text);
+            const voice = resolveCustomerVoice(nextMessage.gender);
+            if (voice) {
+                utterance.voice = voice;
+                // Use voice's native language for correct pronunciation
+                utterance.lang = isTargetLanguageVoice(voice) ? (currentLanguage === 'en' ? 'en-US' : 'he-IL') : voice.lang;
+            } else {
+                utterance.lang = currentLanguage === 'en' ? 'en-US' : 'he-IL';
+            }
+            const resolvedVoiceGender = guessVoiceGender(voice);
+            const prosody = getHumanProsody(nextMessage.text, nextMessage.gender, resolvedVoiceGender, getScenarioSpeechStyle(currentScenario));
+            utterance.rate = prosody.rate;
+            utterance.pitch = prosody.pitch;
+            utterance.volume = prosody.volume;
+
+            if (customerVoiceDebugMode) {
+                const allTarget = (cachedTTSVoices.length > 0 ? cachedTTSVoices : window.speechSynthesis.getVoices()).filter(v => isTargetLanguageVoice(v));
+                const voiceList = allTarget.length > 0 ? allTarget.map(v => `${v.name}(${guessVoiceGender(v)})`).join(' | ') : 'no target voices';
+                const debugText = `DEBUG | target:${nextMessage.gender} | voice:${voice?.name || 'none'} | detected:${resolvedVoiceGender} | lang:${utterance.lang} | rate:${utterance.rate.toFixed(2)} | pitch:${utterance.pitch.toFixed(2)} | voices: ${voiceList}`;
+                addMessageWithoutTimerReset(debugText, 'system');
+            }
+            if (nextMessage.gender === 'female' && resolvedVoiceGender !== 'female') {
+                if (!noFemaleVoiceWarningShown) {
+                    noFemaleVoiceWarningShown = true;
+                    const femaleVoiceNote = (voice && !isTargetLanguageVoice(voice))
+                        ? (currentLanguage === 'en'
+                            ? `⚠️ No female ${currentLanguage === 'en' ? 'English' : 'Hebrew'} voice found — using female voice (${voice.name}). Pronunciation may differ.`
+                            : `⚠️ אין קול עברי נשי — משמיע בקול נשי (${voice.name}). ההגייה לא תהיה בעברית. להתקנת קול עברי נשי: הגדרות Windows ← שפה וזמן אזורי ← עברית ← אפשרויות שפה ← הורד טקסט לדיבור.`)
+                        : (currentLanguage === 'en'
+                            ? `⚠️ No female voice found — audio will sound male.`
+                            : `⚠️ לא נמצא קול נשי בכלל — הקול יישמע גברי. להתקנת קול עברי נשי: הגדרות Windows ← שפה וזמן אזורי ← עברית ← אפשרויות שפה ← הורד טקסט לדיבור.`);
+                    addMessageWithoutTimerReset(femaleVoiceNote, 'system');
+                }
+            }
+
+            activeCustomerUtterance = utterance;
+            isCustomerSpeechPlaying = true;
+            utterance.onend = () => {
+                if (activeCustomerUtterance === utterance) {
+                    activeCustomerUtterance = null;
+                }
+                isCustomerSpeechPlaying = false;
+                setTimeout(tryPlayNextCustomerMessage, nextMessage.pauseAfterMs || 120);
+            };
+            utterance.onerror = () => {
+                if (activeCustomerUtterance === utterance) {
+                    activeCustomerUtterance = null;
+                }
+                isCustomerSpeechPlaying = false;
+                setTimeout(tryPlayNextCustomerMessage, nextMessage.pauseAfterMs || 120);
+            };
+
+            window.speechSynthesis.speak(utterance);
+        }
+
+        function speakCustomerMessage(text) {
+            if (!customerSpeechEnabled || !('speechSynthesis' in window)) {
+                return;
+            }
+
+            const messageBody = getCustomerMessageBody(text);
+            if (!messageBody) {
+                return;
+            }
+
+            const messageGender = inferCustomerGenderFromText(text);
+            const chunks = splitSpeechIntoChunks(messageBody);
+            if (chunks.length === 0) {
+                return;
+            }
+
+            chunks.forEach((chunk) => {
+                customerSpeechQueue.push({
+                    text: chunk.text,
+                    gender: messageGender,
+                    pauseAfterMs: chunk.pauseAfterMs
+                });
+            });
+            tryPlayNextCustomerMessage();
+        }
+
+        function finalizeConversationAfterCustomerSpeech(disconnectedBy, systemMessage) {
+            const isCustomerSpeaking = isCustomerSpeechPlaying || customerSpeechQueue.length > 0
+                || (('speechSynthesis' in window) && window.speechSynthesis.speaking);
+            if (isCustomerSpeaking) {
+                pendingCustomerDisconnect = { disconnectedBy, systemMessage };
+                return;
+            }
+
+            finalizeConversation(disconnectedBy, systemMessage);
+        }
+
+        if ('speechSynthesis' in window) {
+            window.speechSynthesis.onvoiceschanged = () => {
+                selectedCustomerVoices = { male: null, female: null, neutral: null };
+            };
+        }
+
+        function loadConversationDirection() {
+            return localStorage.getItem('conversationDirection') || 'incoming';
+        }
+
+        function getConversationDirectionLabel(direction = loadConversationDirection()) {
+            return direction === 'outgoing' ? S('dirOutgoing') : S('dirIncoming');
+        }
+
+        function getConversationDirectionStatusLabel(direction = loadConversationDirection()) {
+            return direction === 'outgoing' ? S('dirOutgoingShort') : S('dirIncomingShort');
+        }
+
+        function getConversationDirectionDisplay(direction = loadConversationDirection()) {
+            return direction === 'outgoing' ? `📤 ${S('dirOutgoing')}` : `📥 ${S('dirIncoming')}`;
+        }
+
+        function getProfessionalTypeLabel(type = currentScenario?.type || conversationType?.value) {
+            if (type === 'sales') return S('domainSales');
+            if (type === 'service') return S('domainService');
+            return S('domainTechnical');
+        }
+
+        function getDifficultyLabel(level = difficultyLevel?.value || 'basic') {
+            if (level === 'advanced') return S('diffAdvanced');
+            if (level === 'intermediate') return S('diffIntermediate');
+            return S('diffBasic');
+        }
+
+        function getConversationModeConfig(selectedMode = loadConversationModeSetting()) {
+            const modeCalm = S('modeCalm'), modeBalanced = S('modeBalanced'), modeTense = S('modeTense');
+            const modes = {
+                calm:     { key: 'calm',     label: modeCalm,     rateDelta: -0.05, pitchDelta: -0.01, impatienceMultiplier: 1.25, followUpDelta: -0.08 },
+                balanced: { key: 'balanced', label: modeBalanced, rateDelta:  0,    pitchDelta:  0,    impatienceMultiplier: 1,    followUpDelta:  0    },
+                tense:    { key: 'tense',    label: modeTense,    rateDelta:  0.04, pitchDelta:  0.03, impatienceMultiplier: 0.78, followUpDelta:  0.12 }
+            };
+
+            if (selectedMode === 'auto') {
+                const randomKeys = ['calm', 'balanced', 'tense'];
+                return modes[randomKeys[Math.floor(Math.random() * randomKeys.length)]];
+            }
+
+            return modes[selectedMode] || modes.balanced;
+        }
+
+        function getConversationModeLabel(modeKey = currentScenario?.conversationMode?.key || loadConversationModeSetting()) {
+            if (modeKey === 'auto') return S('modeAuto');
+            if (modeKey === 'calm') return S('modeCalm');
+            if (modeKey === 'tense') return S('modeTense');
+            return S('modeBalanced');
+        }
+
+        function updateStatus(state, typeLabel = '', difficultyLabelText = '', modeLabelText = '') {
+            statusIcon.classList.remove('status-idle', 'status-active', 'status-disconnected');
+            const conversationDirectionLabel = getConversationDirectionStatusLabel();
+
+            if (state === 'active') {
+                statusIcon.classList.add('status-active');
+                statusText.textContent = S('statusActive');
+                statusType.textContent = typeLabel
+                    ? `${S('statusDomain')}: ${typeLabel} | 📞 ${S('statusCallType')}: ${conversationDirectionLabel}${difficultyLabelText ? ` | 🎯 ${S('statusLevel')}: ${difficultyLabelText}` : ''}${modeLabelText ? ` | 🧭 ${S('statusMode')}: ${modeLabelText}` : ''}`
+                    : `📞 ${S('statusCallType')}: ${conversationDirectionLabel}`;
+                return;
+            }
+
+            if (state === 'disconnected') {
+                statusIcon.classList.add('status-disconnected');
+                statusText.textContent = S('statusDisconnected');
+                statusType.textContent = `📞 ${S('statusCallType')}: ${conversationDirectionLabel}`;
+                return;
+            }
+
+            statusIcon.classList.add('status-idle');
+            statusText.textContent = S('statusReady');
+            statusType.textContent = `📞 ${S('statusCallType')}: ${conversationDirectionLabel}`;
+        }
+
+        function formatDuration(seconds) {
+            const safeSeconds = Math.max(0, Math.floor(seconds));
+            const mins = Math.floor(safeSeconds / 60);
+            const secs = safeSeconds % 60;
+            return `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
+        }
+
+        function getGenderedText(gender, maleText, femaleText) {
+            return gender === 'female' ? femaleText : maleText;
+        }
+
+        function createCustomerIdentity() {
+            const gender = Math.random() < 0.5 ? 'male' : 'female';
+            if (currentLanguage === 'en') {
+                const names = gender === 'female' ? femaleCustomerNamesEn : maleCustomerNamesEn;
+                return { gender, name: names[Math.floor(Math.random() * names.length)] };
+            }
+            const names = gender === 'female' ? femaleCustomerNames : maleCustomerNames;
+            return {
+                gender,
+                name: names[Math.floor(Math.random() * names.length)]
+            };
+        }
+
+        function getCustomerLabel(gender = currentScenario?.gender) {
+            if (currentLanguage === 'en') return 'Customer';
+            return gender === 'female' ? 'לקוחה' : 'לקוח';
+        }
+
+        function countPolitenessExpressions(message) {
+            const normalizedMessage = message.toLowerCase();
+            const politenessPattern = /אני מתנצל(?:ת)? על אי הנוחות|אני מתנצל(?:ת)? על ההמתנה|אני מתנצל(?:ת)?|תודה רבה|תודה לך|תודה על הסבלנות|תודה|בבקשה|סליחה|אשמח לעזור לך|אשמח לסייע לך|אשמח לעזור|אשמח לסייע|אשמח לבדוק עבורך|שמח לעזור|שמחה לעזור|אני כאן כדי לעזור|ברשותך|בשמחה|אודה לך אם|יום טוב|המשך יום נעים/g;
+            const matches = normalizedMessage.match(politenessPattern);
+            return matches ? matches.length : 0;
+        }
+
+        function escapeRegExp(value) {
+            return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        }
+
+        function parseMetricSettings() {
+            const defaults = {
+                targetLongPauseSeconds: 30
+            };
+
+            try {
+                const raw = localStorage.getItem('resultMetricSettings');
+                if (!raw) {
+                    return defaults;
+                }
+
+                const parsed = JSON.parse(raw);
+                return {
+                    targetLongPauseSeconds: Number(parsed.targetLongPauseSeconds ?? defaults.targetLongPauseSeconds)
+                };
+            } catch (_err) {
+                return defaults;
+            }
+        }
+
+        function normalizeMessageText(message) {
+            return message
+                .toLowerCase()
+                .replace(/[.,!?"'()\-]/g, ' ')
+                .replace(/\s+/g, ' ')
+                .trim();
+        }
+
+        function extractMessageBody(text) {
+            const separatorIndex = text.indexOf(':');
+            if (separatorIndex === -1) {
+                return text.trim();
+            }
+
+            return text.slice(separatorIndex + 1).trim();
+        }
+
+        function extractAgentNameFromMessage(message) {
+            const normalized = normalizeMessageText(message);
+            if (currentLanguage === 'en') {
+                const enPatterns = [
+                    /(?:my name is|i'm|i am)\s+([a-z'\-]{2,24})/,
+                    /(?:this is|speaking with)\s+([a-z'\-]{2,24})/
+                ];
+                const nonNameWordsEn = new Set(['here', 'helping', 'calling', 'available', 'happy', 'glad', 'ready']);
+                for (const pattern of enPatterns) {
+                    const match = normalized.match(pattern);
+                    if (match && match[1] && !nonNameWordsEn.has(match[1])) {
+                        return match[1].charAt(0).toUpperCase() + match[1].slice(1);
+                    }
+                }
+                return '';
+            }
+            const nonNameWords = new Set([
+                'יכול', 'יכולה', 'רוצה', 'צריך', 'צריכה', 'מתקשר', 'מתקשרת',
+                'אשמח', 'זמין', 'זמינה', 'נציג', 'נציגה', 'לעזור', 'לסייע'
+            ]);
+            const patterns = [
+                /(?:שמי|השם שלי הוא)\s+([\u05D0-\u05EAa-zA-Z'\-]{2,24})/,
+                /(?:אני|מדבר|מדברת)\s+([\u05D0-\u05EAa-zA-Z'\-]{2,24})/
+            ];
+
+            for (const pattern of patterns) {
+                const match = normalized.match(pattern);
+                if (match && match[1]) {
+                    const candidate = match[1];
+                    if (!nonNameWords.has(candidate)) {
+                        return candidate;
+                    }
+                }
+            }
+
+            return '';
+        }
+
+        function computeScriptSimilarity(scriptText, agentText, agentName = '') {
+            if (!scriptText || !scriptText.trim()) return null;
+
+            const hasAgentNamePlaceholder = currentLanguage === 'en'
+                ? /\[\s*agent\s+name\s*\]/i.test(scriptText)
+                : /\[\s*שם\s+הסוכן\s*\]/.test(scriptText);
+            if (hasAgentNamePlaceholder && !agentName) {
+                return false;
+            }
+
+            const preparedScript = hasAgentNamePlaceholder
+                ? (currentLanguage === 'en'
+                    ? scriptText.replace(/\[\s*agent\s+name\s*\]/gi, agentName)
+                    : scriptText.replace(/\[\s*שם\s+הסוכן\s*\]/g, agentName))
+                : scriptText;
+
+            const normalizeToWords = (value) => value
+                .replace(/[^\u05D0-\u05EA\w\s]/g, ' ')
+                .toLowerCase()
+                .split(/\s+/)
+                .filter(word => word.length > 1);
+
+            const scriptWords = normalizeToWords(preparedScript);
+            if (scriptWords.length === 0) return null;
+
+            const agentWordSet = new Set(normalizeToWords(agentText));
+            const matchedWordCount = scriptWords.filter(word => agentWordSet.has(word)).length;
+            const similarityRatio = matchedWordCount / scriptWords.length;
+
+            return similarityRatio >= 0.8;
+        }
+
+        function isAdditionalHelpOfferMessage(message) {
+            const normalized = normalizeMessageText(message);
+            if (currentLanguage === 'en') {
+                return /(anything\s+else|anything\s+more|help\s+you\s+with\s+anything|further\s+assistance|more\s+i\s+can\s+help|else\s+i\s+can\s+do|else\s+i\s+can\s+assist)/i.test(normalized);
+            }
+            return /(יש עוד משהו|עוד משהו שאוכל לעזור|עוד דבר שאוכל לעזור|אוכל לעזור בעוד משהו|צריך עוד עזרה|זקוק לעזרה נוספת)/.test(normalized);
+        }
+
+        function isCustomerIdentificationRequestMessage(message) {
+            const normalized = normalizeMessageText(message);
+            if (currentLanguage === 'en') {
+                return /(id\s+number|identification|identity|phone\s+number|account\s+number|your\s+name|what\s+is\s+your\s+name|can\s+i\s+have\s+your\s+name|may\s+i\s+ask\s+your\s+name|verify|verification)/i.test(normalized);
+            }
+            return /(תעודת זהות|ת ז|תז|מספר זהות|מספר לקוח|מספר טלפון|טלפון|אימות|לאימות|מה השם|איך קוראים|מה שמך|שם הלקוח|שם הלקוחה)/.test(normalized);
+        }
+
+        function trackCustomerMessageMetrics(text) {
+            customerMessageCount += 1;
+
+            const messageBody = extractMessageBody(text);
+            const normalizedMessage = normalizeMessageText(messageBody);
+            if (normalizedMessage.length < 8) {
+                return;
+            }
+
+            const newCount = (customerIssueOccurrences.get(normalizedMessage) || 0) + 1;
+            customerIssueOccurrences.set(normalizedMessage, newCount);
+            if (newCount === 2) {
+                repeatedIssueCount += 1;
+            }
+        }
+
+        function saveConversationAnalysis(disconnectedBy) {
+            if (!conversationStartTimestamp) {
+                return;
+            }
+
+            const durationSeconds = Math.round((Date.now() - conversationStartTimestamp) / 1000);
+            const averageResponseSampleCount = agentResponseDurationsMs.length;
+            const hasAverageResponseMetric = averageResponseSampleCount > 0;
+            const averageResponseMs = agentResponseDurationsMs.length
+                ? Math.round(agentResponseDurationsMs.reduce((sum, value) => sum + value, 0) / agentResponseDurationsMs.length)
+                : 0;
+            const finalAgentGapMs = lastAgentMessageTimestamp
+                ? Date.now() - lastAgentMessageTimestamp
+                : 0;
+            const hasMaxResponseMetric = Boolean(lastAgentMessageTimestamp);
+            const maxResponseMs = Math.max(longestAgentGapMs, finalAgentGapMs);
+            const settings = parseMetricSettings();
+            const conversationDirection = loadConversationDirection();
+            const hasMessageRatioMetric = customerMessageCount > 0;
+            const agentCustomerRatio = hasMessageRatioMetric
+                ? Number((agentMessageCount / customerMessageCount).toFixed(2))
+                : 0;
+            const configuredOpeningScript = conversationDirection === 'outgoing'
+                ? (localStorage.getItem('openingScriptOutgoing') || '')
+                : (localStorage.getItem('openingScriptIncoming') || '');
+            const configuredClosingScript = localStorage.getItem('closingScript') || '';
+            const openingScriptConfigured = Boolean(configuredOpeningScript.trim());
+            const closingScriptConfigured = Boolean(configuredClosingScript.trim());
+            const comparisonAgentName = currentAgentFirstName || '';
+            const professionalDomain = currentScenario?.type || conversationType.value;
+
+            const analysisResult = {
+                durationSeconds,
+                durationLabel: formatDuration(durationSeconds),
+                disconnectedBy,
+                professionalDomain,
+                professionalDomainLabel: getProfessionalTypeLabel(professionalDomain),
+                conversationDirection,
+                conversationDirectionLabel: getConversationDirectionLabel(conversationDirection),
+                conversationDirectionDisplayLabel: getConversationDirectionDisplay(conversationDirection),
+                hasAverageResponseMetric,
+                averageResponseSampleCount,
+                averageResponseSeconds: Number((averageResponseMs / 1000).toFixed(1)),
+                averageResponseLabel: `${(averageResponseMs / 1000).toFixed(1)} שניות`,
+                hasMaxResponseMetric,
+                maxResponseSeconds: Number((maxResponseMs / 1000).toFixed(1)),
+                maxResponseLabel: `${(maxResponseMs / 1000).toFixed(1)} שניות`,
+                politenessCount,
+                politenessLabel: `${politenessCount} שימושים`,
+                nameAddressCount,
+                nameAddressLabel: `${nameAddressCount} פניות אישיות ללקוח/ה`,
+                longPauseCount,
+                longPauseThresholdSeconds: settings.targetLongPauseSeconds,
+                longPauseLabel: `${longPauseCount} הפסקות מעל ${settings.targetLongPauseSeconds} שניות`,
+                hasMessageRatioMetric,
+                agentMessageCount,
+                customerMessageCount,
+                agentCustomerRatio,
+                agentCustomerRatioLabel: hasMessageRatioMetric
+                    ? `${agentMessageCount}:${customerMessageCount} (יחס ${agentCustomerRatio})`
+                    : 'לא מספיק נתונים',
+                customerType: currentScenario?.customerType || '',
+                customerPersonaSummary: currentScenario?.customerPersonaSummary || '',
+                conversationMode: currentScenario?.conversationMode?.key || loadConversationModeSetting(),
+                conversationModeLabel: currentScenario?.conversationMode?.label || getConversationModeLabel(loadConversationModeSetting()),
+                scenarioDifficultyLevel: currentScenario?.difficultyLevel || 'basic',
+                scenarioDifficultyLabel: currentScenario?.difficulty || getDifficultyLabel('basic'),
+                agentFirstName: comparisonAgentName,
+                detectedAgentName,
+                agentFirstMessage: agentFirstMessage || '',
+                agentLastMessage: agentLastMessage || '',
+                configuredOpeningScript,
+                configuredClosingScript,
+                openingScriptUsed: computeScriptSimilarity(
+                    configuredOpeningScript,
+                    agentFirstMessage || '',
+                    comparisonAgentName
+                ),
+                closingScriptUsed: computeScriptSimilarity(
+                    configuredClosingScript,
+                    agentLastMessage || '',
+                    comparisonAgentName
+                ),
+                scriptComplianceLabel: '',
+                openingScriptConfigured,
+                closingScriptConfigured,
+                repeatedIssueCount,
+                repeatedIssueLabel: `${repeatedIssueCount} חזרות`,
+                offeredAdditionalHelp,
+                offeredAdditionalHelpLabel: offeredAdditionalHelp ? 'כן' : 'לא',
+                customerIdentificationRequested,
+                customerIdentificationLabel: customerIdentificationRequested ? 'כן' : 'לא',
+                createdAt: new Date().toISOString()
+            };
+
+            localStorage.setItem(analysisResultsKey, JSON.stringify(analysisResult));
+        }
+
+        function finalizeConversation(disconnectedBy, systemMessage = 'השיחה נותקה.') {
+            conversationStarted = false;
+            startBtn.disabled = false;
+            endBtn.disabled = true;
+            agentFirstNameInput.disabled = false;
+            messageInput.disabled = true;
+            sendBtn.disabled = true;
+            voiceBtn.disabled = true;
+            stopAgentVoiceInput(false);
+
+            if ((disconnectedBy === 'הסוכן' || disconnectedBy === 'Agent') && 'speechSynthesis' in window) {
+                window.speechSynthesis.cancel();
+            }
+            if (stopActiveDialTone) {
+                stopActiveDialTone();
+                stopActiveDialTone = null;
+            }
+            activeCustomerUtterance = null;
+            isCustomerSpeechPlaying = false;
+            customerSpeechQueue = [];
+            pendingCustomerDisconnect = null;
+
+            if (inactivityTimer) {
+                clearTimeout(inactivityTimer);
+                inactivityTimer = null;
+            }
+            if (disconnectTimer) {
+                clearTimeout(disconnectTimer);
+                disconnectTimer = null;
+            }
+
+            updateStatus('disconnected');
+            saveConversationAnalysis(disconnectedBy);
+
+            conversationStartTimestamp = null;
+            pendingCustomerMessageTimestamp = null;
+            agentResponseDurationsMs = [];
+            lastAgentMessageTimestamp = null;
+            longestAgentGapMs = 0;
+            politenessCount = 0;
+            nameAddressCount = 0;
+            longPauseCount = 0;
+            agentMessageCount = 0;
+            customerMessageCount = 0;
+            repeatedIssueCount = 0;
+            currentAgentFirstName = '';
+            detectedAgentName = '';
+            agentFirstMessage = null;
+            agentLastMessage = '';
+            openingScriptUsed = false;
+            closingScriptUsed = false;
+            offeredAdditionalHelp = false;
+            customerIdentificationRequested = false;
+            customerIssueOccurrences = new Map();
+            setAnalysisButtonEnabled(true);
+
+            addMessage(systemMessage, 'system');
+        }
+
+        function startInactivityTimer() {
+            // Load settings from localStorage
+            const impatienceDelay = parseInt(localStorage.getItem('impatienceTimer')) || 30;
+            const disconnectDelay = parseInt(localStorage.getItem('disconnectTimer')) || 100;
+            const moodMultiplier = currentScenario?.conversationMode?.impatienceMultiplier || 1;
+            const effectiveImpatienceDelay = Math.max(10, Math.round(impatienceDelay * moodMultiplier));
+            const effectiveDisconnectDelay = Math.max(35, Math.round(disconnectDelay * moodMultiplier));
+            
+            // Clear existing timers
+            if (inactivityTimer) {
+                clearTimeout(inactivityTimer);
+            }
+            if (disconnectTimer) {
+                clearTimeout(disconnectTimer);
+            }
+            
+            // Start impatience timer
+            inactivityTimer = setTimeout(() => {
+                if (conversationStarted) {
+                    const gender = currentScenario?.gender || 'male';
+                    const impatientResponses = currentScenario?.impatienceResponses || (currentLanguage === 'en'
+                        ? [
+                            'What is happening? Why are you not responding?',
+                            'I have been waiting for a long time!',
+                            'Please answer already, I cannot wait all day!',
+                            'Hello? Is anyone there?',
+                            'This is taking too long, please hurry.',
+                            'I am starting to lose patience here...',
+                            'Respond already, I am not patient!',
+                            'Do you have nothing to say?',
+                            'I am still waiting...'
+                        ]
+                        : [
+                            'מה קורה? למה אתה לא עונה?',
+                            'אני מחכה כבר הרבה זמן!',
+                            getGenderedText(gender, 'תענה לי כבר, אני לא יכול לחכות כל היום!', 'תענה לי כבר, אני לא יכולה לחכות כל היום!'),
+                            'הלו? יש מישהו שם?',
+                            'זה לוקח יותר מדי זמן, תזדרז!',
+                            getGenderedText(gender, 'אני מתחיל להתייאש כאן...', 'אני מתחילה להתייאש כאן...'),
+                            getGenderedText(gender, 'תגיב כבר, אני לא סבלני!', 'תגיב כבר, אני לא סבלנית!'),
+                            'אין לך מה להגיד?',
+                            'אני עדיין מחכה...'
+                        ]);
+                    const randomResponse = impatientResponses[Math.floor(Math.random() * impatientResponses.length)];
+                    addMessageWithoutTimerReset(getCustomerLabel() + ': ' + randomResponse, 'agent');
+                    // Restart only the impatience timer, not the disconnect timer
+                    startImpatienceTimer();
+                }
+            }, effectiveImpatienceDelay * 1000);
+            
+            // Start disconnect timer
+            disconnectTimer = setTimeout(() => {
+                if (conversationStarted) {
+                    const gender = currentScenario?.gender || 'male';
+                    const despairMessages = currentScenario?.despairMessages || (currentLanguage === 'en'
+                        ? [
+                            'Enough, I cannot continue like this!',
+                            'That is it, I am done here!',
+                            'I am not waiting any longer, goodbye!',
+                            'This is unbearable, I am leaving!',
+                            'I have no energy for this anymore!'
+                        ]
+                        : [
+                            getGenderedText(gender, 'די, אני לא יכול יותר עם זה!', 'די, אני לא יכולה יותר עם זה!'),
+                            getGenderedText(gender, 'מספיק, אני מתייאש!', 'מספיק, אני מתייאשת!'),
+                            'אני לא מחכה יותר, שלום!',
+                            getGenderedText(gender, 'זה בלתי נסבל, אני נוטש!', 'זה בלתי נסבל, אני נוטשת!'),
+                            'אין לי כוח לזה יותר!'
+                        ]);
+                    const randomDespair = despairMessages[Math.floor(Math.random() * despairMessages.length)];
+                    addMessage(getCustomerLabel() + ': ' + randomDespair, 'agent');
+
+                    if (conversationStarted) {
+                        finalizeConversationAfterCustomerSpeech(getCustomerLabel(), S('disconnectedMsg'));
+                    }
+                }
+            }, effectiveDisconnectDelay * 1000);
+        }
+
+        function startImpatienceTimer() {
+            // Load settings from localStorage
+            const impatienceDelay = parseInt(localStorage.getItem('impatienceTimer')) || 30;
+            const moodMultiplier = currentScenario?.conversationMode?.impatienceMultiplier || 1;
+            const effectiveImpatienceDelay = Math.max(10, Math.round(impatienceDelay * moodMultiplier));
+            
+            // Clear existing impatience timer only
+            if (inactivityTimer) {
+                clearTimeout(inactivityTimer);
+            }
+            
+            // Start impatience timer
+            inactivityTimer = setTimeout(() => {
+                if (conversationStarted) {
+                    const gender = currentScenario?.gender || 'male';
+                    const impatientResponses = currentScenario?.impatienceResponses || (currentLanguage === 'en'
+                        ? [
+                            'What is happening? Why are you not responding?',
+                            'I have been waiting for a long time!',
+                            'Please answer already, I cannot wait all day!',
+                            'Hello? Is anyone there?',
+                            'This is taking too long, please hurry.',
+                            'I am starting to lose patience here...',
+                            'Respond already, I am not patient!',
+                            'Do you have nothing to say?',
+                            'I am still waiting...'
+                        ]
+                        : [
+                            'מה קורה? למה אתה לא עונה?',
+                            'אני מחכה כבר הרבה זמן!',
+                            getGenderedText(gender, 'תענה לי כבר, אני לא יכול לחכות כל היום!', 'תענה לי כבר, אני לא יכולה לחכות כל היום!'),
+                            'הלו? יש מישהו שם?',
+                            'זה לוקח יותר מדי זמן, תזדרז!',
+                            getGenderedText(gender, 'אני מתחיל להתייאש כאן...', 'אני מתחילה להתייאש כאן...'),
+                            getGenderedText(gender, 'תגיב כבר, אני לא סבלני!', 'תגיב כבר, אני לא סבלנית!'),
+                            'אין לך מה להגיד?',
+                            'אני עדיין מחכה...'
+                        ]);
+                    const randomResponse = impatientResponses[Math.floor(Math.random() * impatientResponses.length)];
+                    addMessageWithoutTimerReset(getCustomerLabel() + ': ' + randomResponse, 'agent');
+                    // Restart only the impatience timer
+                    startImpatienceTimer();
+                }
+            }, effectiveImpatienceDelay * 1000);
+        }
+
+        function addMessageWithoutTimerReset(text, type) {
+            const messageDiv = document.createElement('div');
+            messageDiv.className = 'message ' + type;
+            messageDiv.textContent = text;
+            chat.appendChild(messageDiv);
+            chat.scrollTop = chat.scrollHeight;
+            if (conversationStarted && type === 'agent' && /^(?:לקוח(?:ה)?|Customer):/.test(text)) {
+                trackCustomerMessageMetrics(text);
+                pendingCustomerMessageTimestamp = Date.now();
+                speakCustomerMessage(text);
+            }
+            // Don't reset timer
+        }
+
+        function selectRandomTraits(pool) {
+            const shuffled = pool.slice().sort(() => Math.random() - 0.5);
+            const count = 2 + Math.floor(Math.random() * 2);
+            return shuffled.slice(0, count);
+        }
+
+        function createCustomerPersona(domain, gender) {
+            if (currentLanguage === 'en') {
+                const personasEn = {
+                    sales: [
+                        {
+                            label: 'Skeptic',
+                            summary: 'Asks for proof, slow to trust promises, looks for precision.',
+                            extraTraits: ['Critical', 'Cautious'],
+                            extraResponses: [
+                                'I don\'t rush to believe offers like this.',
+                                'If there\'s a real benefit, spell it out completely.',
+                                'I want to understand where the fine print is.'
+                            ],
+                            followUpBoost: 0.1
+                        },
+                        {
+                            label: 'Bargain Hunter',
+                            summary: 'Focused on price, looking for an exceptional deal.',
+                            extraTraits: ['Calculated', 'Price-focused'],
+                            extraResponses: [
+                                'If there\'s no exceptional price here, I have no reason to proceed.',
+                                'I\'m comparing with two other offers right now.',
+                                'Give me the bottom line — how much does this actually cost.'
+                            ],
+                            followUpBoost: 0.05
+                        },
+                        {
+                            label: 'Word Catcher',
+                            summary: 'Remembers every phrasing, looks for contradictions.',
+                            extraTraits: ['Sharp', 'Alert'],
+                            extraResponses: [
+                                'A moment ago you said something different, I want you to be precise.',
+                                'If you\'re committing, I expect it to be unambiguous.',
+                                'I\'m listening to every detail, so don\'t confuse me.'
+                            ],
+                            followUpBoost: 0.15
+                        }
+                    ],
+                    service: [
+                        {
+                            label: 'Angry',
+                            summary: 'Arrives frustrated, wants an immediate solution.',
+                            extraTraits: ['Emotional', 'Impatient'],
+                            extraResponses: [
+                                'I\'m really fed up with this whole situation.',
+                                'I shouldn\'t have to chase you to get what I deserve.',
+                                'Fix this without transferring me between agents.'
+                            ],
+                            followUpBoost: 0.2
+                        },
+                        {
+                            label: 'Seeking Compensation',
+                            summary: 'Not satisfied with a solution alone, expects a credit or compensation.',
+                            extraTraits: ['Firm', 'Results-focused'],
+                            extraResponses: [
+                                'A solution is good, but I also expect compensation.',
+                                'After what happened, I deserve a real credit.',
+                                'I want to know what you\'re doing to make up for the mistake.'
+                            ],
+                            followUpBoost: 0.12
+                        },
+                        {
+                            label: 'Loyal but Disappointed',
+                            summary: 'Was satisfied before, so current disappointment hits harder.',
+                            extraTraits: ['Sensitive', 'Expecting respect'],
+                            extraResponses: [
+                                'I certainly didn\'t expect this kind of experience from you.',
+                                'I\'ve been with you a long time, and this isn\'t what I expected.',
+                                'I want to feel that I\'m valued as a long-term customer.'
+                            ],
+                            followUpBoost: 0.08
+                        }
+                    ],
+                    technical: [
+                        {
+                            label: 'Time Pressured',
+                            summary: 'Needs a fast solution because the issue affects work.',
+                            extraTraits: ['Urgent', 'Direct'],
+                            extraResponses: [
+                                'I don\'t have time for this, I need a solution now.',
+                                'Every minute this doesn\'t work is affecting my job.',
+                                'I need you to be direct and cut the process short.'
+                            ],
+                            followUpBoost: 0.18
+                        },
+                        {
+                            label: 'Technically Confused',
+                            summary: 'Doesn\'t understand technical terms, needs simple guidance.',
+                            extraTraits: ['Unsure', 'Needs guidance'],
+                            extraResponses: [
+                                'Please explain simply, I don\'t understand these terms.',
+                                'I\'m getting confused by these explanations.',
+                                'Tell me step by step what to do.'
+                            ],
+                            followUpBoost: 0.05
+                        },
+                        {
+                            label: 'Technical Critic',
+                            summary: 'Asks deep questions, tests professionalism, looks for flaws.',
+                            extraTraits: ['Analytical', 'Testing'],
+                            extraResponses: [
+                                'I want to understand exactly why this is happening, not just what to do.',
+                                'If it\'s a temporary fix, tell me upfront.',
+                                'I\'m checking whether you\'re actually diagnosing the problem correctly.'
+                            ],
+                            followUpBoost: 0.14
+                        }
+                    ]
+                };
+                const pool = personasEn[domain] || personasEn.technical;
+                return pool[Math.floor(Math.random() * pool.length)];
+            }
+
+            const personas = {
+                sales: [
+                    {
+                        label: getGenderedText(gender, 'חשדן', 'חשדנית'),
+                        summary: 'מבקש הוכחות, לא מאמין מהר להבטחות ומחפש דיוק בפרטים.',
+                        extraTraits: ['ביקורתי', 'זהיר'],
+                        extraResponses: [
+                            getGenderedText(gender, 'אני לא ממהר להאמין להצעות כאלה.', 'אני לא ממהרת להאמין להצעות כאלה.'),
+                            'אם יש הטבה אמיתית, תפרטו אותה עד הסוף.',
+                            'אני רוצה להבין איפה האותיות הקטנות.'
+                        ],
+                        followUpBoost: 0.1
+                    },
+                    {
+                        label: getGenderedText(gender, 'צייד מציאות', 'ציידת מציאות'),
+                        summary: 'ממוקד במחיר, מחפש עסקה חריגה ומנסה למקסם תמורה.',
+                        extraTraits: ['מחושב', 'ממוקד מחיר'],
+                        extraResponses: [
+                            'אם אין פה מחיר יוצא דופן, אין לי סיבה להתקדם.',
+                            'אני משווה כרגע מול עוד שתי הצעות.',
+                            'תנו לי את השורה התחתונה, כמה זה עולה באמת.'
+                        ],
+                        followUpBoost: 0.05
+                    },
+                    {
+                        label: getGenderedText(gender, 'תופס את הסוכן במילה', 'תופסת את הסוכן במילה'),
+                        summary: 'זוכר כל ניסוח, מחפש סתירות ודורש עקביות מלאה.',
+                        extraTraits: ['חד', 'עירני'],
+                        extraResponses: [
+                            'לפני רגע אמרת משהו אחר, אני רוצה שתדייק.',
+                            'אם אתה מתחייב, אני מצפה שזה יהיה חד משמעי.',
+                            'אני מקשיב לכל פרט, אז אל תערבבו אותי.'
+                        ],
+                        followUpBoost: 0.15
+                    }
+                ],
+                service: [
+                    {
+                        label: getGenderedText(gender, 'כועס', 'כועסת'),
+                        summary: 'מגיע טעון, רוצה פתרון מיידי ופחות סבלני לעיכובים.',
+                        extraTraits: ['אמוציונלי', 'קצר רוח'],
+                        extraResponses: [
+                            getGenderedText(gender, 'אני כבר ממש עצבני מהסיפור הזה.', 'אני כבר ממש עצבנית מהסיפור הזה.'),
+                            'אני לא אמור לרדוף אחריכם כדי לקבל מה שמגיע לי.',
+                            'תפתרו את זה בלי להעביר אותי בין נציגים.'
+                        ],
+                        followUpBoost: 0.2
+                    },
+                    {
+                        label: getGenderedText(gender, 'מחפש פיצוי', 'מחפשת פיצוי'),
+                        summary: 'לא מסתפק בפתרון בלבד ומצפה לזיכוי, פיצוי או הטבה.',
+                        extraTraits: ['תקיף', 'ממוקד תוצאה'],
+                        extraResponses: [
+                            'פתרון זה טוב, אבל אני גם מצפה לפיצוי.',
+                            'אחרי מה שקרה, מגיע לי זיכוי אמיתי.',
+                            'אני רוצה לדעת מה אתם עושים כדי לפצות על הטעות.'
+                        ],
+                        followUpBoost: 0.12
+                    },
+                    {
+                        label: getGenderedText(gender, 'לקוח נאמן מאוכזב', 'לקוחה נאמנה מאוכזבת'),
+                        summary: 'היה מרוצה בעבר, ולכן האכזבה הנוכחית משמעותית יותר.',
+                        extraTraits: ['רגיש', 'מצפה ליחס'],
+                        extraResponses: [
+                            'דווקא מכם לא ציפיתי לחוויה כזאת.',
+                            'אני כבר הרבה זמן אצלכם, וזה לא היחס שציפיתי לו.',
+                            'אני רוצה להרגיש שמעריכים אותי כלקוח ותיק.'
+                        ],
+                        followUpBoost: 0.08
+                    }
+                ],
+                technical: [
+                    {
+                        label: getGenderedText(gender, 'לחוץ בזמן', 'לחוצה בזמן'),
+                        summary: 'צריך פתרון מהר כי הבעיה פוגעת בלו"ז או בעבודה.',
+                        extraTraits: ['דחוף', 'ישיר'],
+                        extraResponses: [
+                            getGenderedText(gender, 'אין לי זמן לזה, אני חייב פתרון עכשיו.', 'אין לי זמן לזה, אני חייבת פתרון עכשיו.'),
+                            'כל דקה שזה לא עובד פוגעת לי בעבודה.',
+                            'אני צריך שתדברו תכלס ותקצרו תהליכים.'
+                        ],
+                        followUpBoost: 0.18
+                    },
+                    {
+                        label: getGenderedText(gender, 'מבולבל טכנית', 'מבולבלת טכנית'),
+                        summary: 'לא שולט במונחים טכניים וצריך הסבר פשוט וברור.',
+                        extraTraits: ['חסר ביטחון', 'זקוק להכוונה'],
+                        extraResponses: [
+                            'תסבירו לי פשוט, אני לא מבין במונחים האלה.',
+                            getGenderedText(gender, 'אני מסתבך עם ההסברים האלה.', 'אני מסתבכת עם ההסברים האלה.'),
+                            'תגידו לי שלב שלב מה לעשות.'
+                        ],
+                        followUpBoost: 0.05
+                    },
+                    {
+                        label: getGenderedText(gender, 'טכני ביקורתי', 'טכנית ביקורתית'),
+                        summary: 'שואל שאלות עומק, בודק מקצועיות ומחפש סתירות בפתרון.',
+                        extraTraits: ['אנליטי', 'בוחן'],
+                        extraResponses: [
+                            'אני רוצה להבין למה בדיוק זה קורה ולא רק מה לעשות.',
+                            'אם זה פתרון זמני, תגידו לי את זה מראש.',
+                            'אני בודק אם אתם באמת מאבחנים נכון את התקלה.'
+                        ],
+                        followUpBoost: 0.14
+                    }
+                ]
+            };
+
+            const pool = personas[domain] || personas.technical;
+            return pool[Math.floor(Math.random() * pool.length)];
+        }
+
+        function createDifficultyProfile(level, gender) {
+            if (currentLanguage === 'en') {
+                const profilesEn = {
+                    basic: {
+                        label: 'Basic',
+                        extraResponses: [
+                            'Okay, I\'m listening.',
+                            'Alright, I\'d like to understand what can be done.',
+                            'Thanks, please explain in an organized way.'
+                        ],
+                        impatienceResponses: [
+                            'I\'m still waiting for an answer.',
+                            'Can you update me on what\'s happening?',
+                            'I\'d appreciate a response.'
+                        ],
+                        despairMessages: [
+                            'I\'ll end the call here, thanks.',
+                            'I didn\'t get a response, I have to hang up.'
+                        ],
+                        followUpChance: 0.1,
+                        followUpResponses: [
+                            'I just want to make sure this gets handled promptly.'
+                        ]
+                    },
+                    intermediate: {
+                        label: 'Intermediate',
+                        extraResponses: [
+                            'I want a more precise answer.',
+                            'I hear you, but this still doesn\'t solve my problem.',
+                            'I need a clear answer, not a vague one.'
+                        ],
+                        impatienceResponses: [
+                            'This is taking too long, please move forward.',
+                            'I need an update right now.',
+                            'I\'ve been waiting quite a while.'
+                        ],
+                        despairMessages: [
+                            'If there\'s no solution now, I\'m ending the call.',
+                            'This isn\'t progressing, I\'m hanging up.'
+                        ],
+                        followUpChance: 0.3,
+                        followUpResponses: [
+                            'And I also want to know when this will actually happen.',
+                            'I don\'t want to be transferred without an answer.',
+                            'I expect a concrete solution.'
+                        ]
+                    },
+                    advanced: {
+                        label: 'Advanced',
+                        extraResponses: [
+                            'I won\'t accept partial answers, give me a complete solution.',
+                            'Don\'t go around me, I want a precise answer now.',
+                            'If this isn\'t resolved now, I\'m escalating.',
+                            'I expect you to take full responsibility for this.'
+                        ],
+                        impatienceResponses: [
+                            'How long can this drag on? I demand an answer now.',
+                            'I\'m losing patience, give me a real solution.',
+                            'If this continues, I\'ll end the call.'
+                        ],
+                        despairMessages: [
+                            'Enough, I\'m not staying on the line anymore.',
+                            'This is unprofessional, I\'m disconnecting.',
+                            'There\'s no proper service here, goodbye.'
+                        ],
+                        followUpChance: 0.55,
+                        followUpResponses: [
+                            'And don\'t ask me to repeat myself again.',
+                            'I also want a clear commitment on follow-up.',
+                            'If you don\'t have a solution, connect me to a senior person.',
+                            'I won\'t wait without a clear answer.'
+                        ]
+                    }
+                };
+                return profilesEn[level] || profilesEn.basic;
+            }
+
+            const profiles = {
+                basic: {
+                    label: 'בסיסי',
+                    extraResponses: [
+                        getGenderedText(gender, 'אוקיי, אני מקשיב.', 'אוקיי, אני מקשיבה.'),
+                        'בסדר, אשמח להבין מה אפשר לעשות.',
+                        'תודה, תסביר לי בצורה מסודרת.'
+                    ],
+                    impatienceResponses: [
+                        getGenderedText(gender, 'אני עדיין ממתין לתשובה.', 'אני עדיין ממתינה לתשובה.'),
+                        'אפשר לעדכן אותי מה קורה?',
+                        'אשמח שתתייחסו לזה.'
+                    ],
+                    despairMessages: [
+                        'אני אסיים כאן את השיחה, תודה.',
+                        getGenderedText(gender, 'לא קיבלתי מענה, אני נאלץ לסגור.', 'לא קיבלתי מענה, אני נאלצת לסגור.')
+                    ],
+                    followUpChance: 0.1,
+                    followUpResponses: [
+                        'רק חשוב לי שזה יטופל בהקדם.'
+                    ]
+                },
+                intermediate: {
+                    label: 'בינוני',
+                    extraResponses: [
+                        'אני רוצה תשובה יותר מדויקת.',
+                        getGenderedText(gender, 'אני שומע, אבל זה עדיין לא פותר לי את הבעיה.', 'אני שומעת, אבל זה עדיין לא פותר לי את הבעיה.'),
+                        getGenderedText(gender, 'אני צריך מענה ברור ולא כללי.', 'אני צריכה מענה ברור ולא כללי.')
+                    ],
+                    impatienceResponses: [
+                        'זה מתעכב יותר מדי, תתקדמו בבקשה.',
+                        getGenderedText(gender, 'אני צריך עדכון עכשיו.', 'אני צריכה עדכון עכשיו.'),
+                        'אני מחכה כבר זמן לא קצר.'
+                    ],
+                    despairMessages: [
+                        'אם אין פתרון עכשיו, אני מסיים את השיחה.',
+                        'זה לא מתקדם, אני סוגר כאן.'
+                    ],
+                    followUpChance: 0.3,
+                    followUpResponses: [
+                        'וגם חשוב לי להבין מתי זה יקרה בפועל.',
+                        'אני לא רוצה שתעבירו אותי הלאה בלי תשובה.',
+                        'אני מצפה לפתרון קונקרטי.'
+                    ]
+                },
+                advanced: {
+                    label: 'מתקדם',
+                    extraResponses: [
+                        'אני לא מקבל תשובות חלקיות, תנו פתרון מלא.',
+                        'אל תסובבו אותי, אני רוצה תשובה מדויקת עכשיו.',
+                        getGenderedText(gender, 'אם זה לא ייפתר עכשיו, אני מחריף את הפנייה.', 'אם זה לא ייפתר עכשיו, אני מחריפה את הפנייה.'),
+                        getGenderedText(gender, 'אני מצפה שתיקח אחריות מלאה על זה.', 'אני מצפה שתיקחי אחריות מלאה על זה.')
+                    ],
+                    impatienceResponses: [
+                        'כמה אפשר למשוך זמן? אני דורש תשובה עכשיו.',
+                        getGenderedText(gender, 'אני כבר מאבד סבלנות, תן לי פתרון אמיתי.', 'אני כבר מאבדת סבלנות, תן לי פתרון אמיתי.'),
+                        'אם זה ימשיך כך, אני אסיים את השיחה.'
+                    ],
+                    despairMessages: [
+                        getGenderedText(gender, 'מספיק, אני לא נשאר על הקו יותר.', 'מספיק, אני לא נשארת על הקו יותר.'),
+                        'זה לא מקצועי, אני מנתק.',
+                        'אין פה מענה רציני, שלום.'
+                    ],
+                    followUpChance: 0.55,
+                    followUpResponses: [
+                        'ואל תבקש ממני לחזור על עצמי שוב.',
+                        'אני רוצה גם התחייבות ברורה על המשך הטיפול.',
+                        'אם אין לך פתרון עכשיו, תחבר לגורם בכיר.',
+                        'אני לא מוכן להמתין בלי תשובה ברורה.'
+                    ]
+                }
+            };
+
+            return profiles[level] || profiles.basic;
+        }
+
+        function createRandomSpeechStyle() {
+            const styles = [
+                { key: 'calm', label: 'רגוע', rateDelta: -0.05, pitchDelta: -0.02 },
+                { key: 'assertive', label: 'אסרטיבי', rateDelta: 0.03, pitchDelta: -0.01 },
+                { key: 'empathetic', label: 'אמפתי', rateDelta: -0.03, pitchDelta: 0.04 },
+                { key: 'matter_of_fact', label: 'ענייני', rateDelta: 0, pitchDelta: 0 }
+            ];
+            return styles[Math.floor(Math.random() * styles.length)];
+        }
+
+        function getScenarioSpeechStyle(scenario) {
+            const baseStyle = scenario?.speechStyle || { rateDelta: 0, pitchDelta: 0 };
+            const modeStyle = scenario?.conversationMode || { rateDelta: 0, pitchDelta: 0 };
+            return {
+                rateDelta: (baseStyle.rateDelta || 0) + (modeStyle.rateDelta || 0),
+                pitchDelta: (baseStyle.pitchDelta || 0) + (modeStyle.pitchDelta || 0)
+            };
+        }
+
+        function enrichScenarioWithDifficulty(baseScenario, level) {
+            const profile = createDifficultyProfile(level, baseScenario.gender);
+            const persona = createCustomerPersona(baseScenario.type, baseScenario.gender);
+            const speechStyle = createRandomSpeechStyle();
+            const selectedMode = loadConversationModeSetting();
+            const conversationModeConfig = getConversationModeConfig(selectedMode);
+            return {
+                ...baseScenario,
+                customerType: persona.label,
+                customerPersonaSummary: persona.summary,
+                speechStyle,
+                conversationMode: conversationModeConfig,
+                difficultyLevel: level,
+                difficulty: profile.label,
+                traits: Array.from(new Set([...(baseScenario.traits || []), ...(persona.extraTraits || [])])),
+                responses: baseScenario.responses.concat(profile.extraResponses, persona.extraResponses || []),
+                impatienceResponses: profile.impatienceResponses,
+                despairMessages: profile.despairMessages,
+                followUpChance: Math.min(0.95, Math.max(0.02, profile.followUpChance + (persona.followUpBoost || 0) + (conversationModeConfig.followUpDelta || 0))),
+                followUpResponses: (profile.followUpResponses || []).concat(persona.extraResponses || []),
+                usedFollowUps: []
+            };
+        }
+
+        function pickUnusedScenarioMessage(source, usedKey) {
+            if (!currentScenario || !Array.isArray(source) || source.length === 0) {
+                return '';
+            }
+
+            const usedMessages = currentScenario[usedKey] || [];
+            let available = source.filter((message) => !usedMessages.includes(message));
+            if (available.length === 0) {
+                currentScenario[usedKey] = [];
+                available = source.slice();
+            }
+
+            const selectedMessage = available[Math.floor(Math.random() * available.length)];
+            currentScenario[usedKey].push(selectedMessage);
+            return selectedMessage;
+        }
+
+        function maybeQueueCustomerFollowUp() {
+            if (!conversationStarted || !currentScenario || !Array.isArray(currentScenario.followUpResponses)) {
+                return;
+            }
+
+            if (Math.random() > (currentScenario.followUpChance || 0)) {
+                return;
+            }
+
+            const followUpMessage = pickUnusedScenarioMessage(currentScenario.followUpResponses, 'usedFollowUps');
+            if (!followUpMessage) {
+                return;
+            }
+
+            setTimeout(() => {
+                if (conversationStarted) {
+                    addMessage(getCustomerLabel() + ': ' + followUpMessage, 'agent');
+                }
+            }, 1800);
+        }
+
+        function getOutgoingPickupGreeting() {
+            if (currentLanguage === 'en') {
+                const greetingsEn = ['Hello?', 'Hello, who is this?', 'Hello'];
+                return greetingsEn[Math.floor(Math.random() * greetingsEn.length)];
+            }
+            const greetings = ['הלו', 'שלום, מי זה?', 'שלום'];
+            return greetings[Math.floor(Math.random() * greetings.length)];
+        }
+
+        function generateSalesScenario(level) {
+            const identity = createCustomerIdentity();
+            const ages = [32, 35, 42, 48, 55];
+
+            if (currentLanguage === 'en') {
+                const situationsEn = [
+                    { main: 'interested in a new iPhone', background: 'heard the price might drop and wants to know if it\'s worth switching now' },
+                    { main: 'interested in joining a mobile plan', background: 'wants to switch to your plan with a promotional first-period discount' },
+                    { main: 'looking for an affordable new phone', background: 'wants a budget device with good specs and a matching mobile plan' }
+                ];
+                const traitsPoolEn = ['nervous', 'skeptical', 'cold', 'pressed', 'smart', 'confused', 'calculating', 'indifferent'];
+                const sit = situationsEn[Math.floor(Math.random() * situationsEn.length)];
+                const traits = selectRandomTraits(traitsPoolEn);
+                return enrichScenarioWithDifficulty({
+                    type: 'sales',
+                    gender: identity.gender,
+                    name: identity.name,
+                    age: ages[Math.floor(Math.random() * ages.length)],
+                    situation: sit.main,
+                    background: sit.background,
+                    traits,
+                    responses: [
+                        'I don\'t want a pretty package, I want a good deal.',
+                        'Explain to me why this is actually worth it.',
+                        'I don\'t believe every excuse, show me real numbers.',
+                        'That\'s not good enough for me, try to be clearer.',
+                        'Find me something with real value, not just talk.'
+                    ],
+                    usedResponses: [],
+                    initialMessage: `Customer: Hello. I\'m ${sit.main}. ${sit.background}. What can you do for me?`,
+                    outgoingFirstResponse: `Hello. I\'m ${sit.main}. ${sit.background}. I\'d love to hear what you can offer.`
+                }, level);
+            }
+
+            const situations = [
+                {
+                    mainMale: 'מתעניין באייפון חדש',
+                    mainFemale: 'מתעניינת באייפון חדש',
+                    backgroundMale: 'שמע שהמחיר עומד לרדת והוא רוצה לדעת אם כדאי לעבור עכשיו',
+                    backgroundFemale: 'שמעה שהמחיר עומד לרדת והיא רוצה לדעת אם כדאי לעבור עכשיו'
+                },
+                {
+                    mainMale: 'מתעניין בהצטרפות לשרות הסלולר',
+                    mainFemale: 'מתעניינת בהצטרפות לשרות הסלולר',
+                    backgroundMale: 'מעוניין לעבור לחבילה שלכם עם הטבה לתקופה ראשונה',
+                    backgroundFemale: 'מעוניינת לעבור לחבילה שלכם עם הטבה לתקופה ראשונה'
+                },
+                {
+                    mainMale: 'מתעניין בטלפון חדש זול',
+                    mainFemale: 'מתעניינת בטלפון חדש זול',
+                    backgroundMale: 'מחפש מכשיר זול עם מפרט טוב וגם חבילת סלולר שתתאים לו',
+                    backgroundFemale: 'מחפשת מכשיר זול עם מפרט טוב וגם חבילת סלולר שתתאים לה'
+                }
+            ];
+            const traitsPool = ['עצבני', 'סקפטי', 'קר', 'לחוץ', 'חכם', 'מבולבל', 'מניפולטיבי', 'אדיש'];
+
+            const sit = situations[Math.floor(Math.random() * situations.length)];
+            const traits = selectRandomTraits(traitsPool);
+            const mainText = getGenderedText(identity.gender, sit.mainMale, sit.mainFemale);
+            const backgroundText = getGenderedText(identity.gender, sit.backgroundMale, sit.backgroundFemale);
+
+            return enrichScenarioWithDifficulty({
+                type: 'sales',
+                gender: identity.gender,
+                name: identity.name,
+                age: ages[Math.floor(Math.random() * ages.length)],
+                situation: mainText,
+                background: backgroundText,
+                traits,
+                responses: [
+                    'אני לא רוצה קופסה יפה, אני רוצה שזו תהיה עסקה טובה.',
+                    'תסבירו לי למה זה כדאי לי באמת.',
+                    'אני לא מאמין לכל תירוץ, תראו לי מספרים אמיתיים.',
+                    'זה לא מספיק טוב בשבילי, תנסו להיות יותר ברורים.',
+                    'מצאו לי משהו עם ערך אמיתי, ולא עוד דיבורים.'
+                ],
+                usedResponses: [],
+                initialMessage: `${getCustomerLabel(identity.gender)}: שלום. ${mainText}. ${backgroundText}. מה אפשר לעשות בשבילי?`,
+                outgoingFirstResponse: `שלום. ${mainText}. ${backgroundText}. אשמח לשמוע מה אפשר להציע לי.`
+            }, level);
+        }
+
+        function generateServiceScenario(level) {
+            const identity = createCustomerIdentity();
+            const ages = [28, 35, 45, 52, 60];
+
+            if (currentLanguage === 'en') {
+                const situationsEn = [
+                    { main: 'overcharge', background: 'received a higher-than-expected bill for inactive services' },
+                    { main: 'unwanted upgrade', background: 'was automatically upgraded to an add-on they didn\'t request' },
+                    { main: 'retention offer mismatch', background: 'was given a retention offer but the bill came out different from what was promised' },
+                    { main: 'billing error after switching', background: 'received an incorrect bill when switching to your service' },
+                    { main: 'contract discrepancy', background: 'the signed contract differs from what was agreed during the call' },
+                    { main: 'plan used up early', background: 'their plan ran out earlier than expected with no notification' },
+                    { main: 'price too high', background: 'the charge is higher than what was originally promised' },
+                    { main: 'cheaper offer from a competitor', background: 'a competitor offered a lower price for the same plan' }
+                ];
+                const traitsPoolEn = ['nervous', 'skeptical', 'cold', 'pressed', 'smart', 'confused', 'calculating', 'indifferent'];
+                const sit = situationsEn[Math.floor(Math.random() * situationsEn.length)];
+                const traits = selectRandomTraits(traitsPoolEn);
+                return enrichScenarioWithDifficulty({
+                    type: 'service',
+                    gender: identity.gender,
+                    name: identity.name,
+                    age: ages[Math.floor(Math.random() * ages.length)],
+                    situation: sit.main,
+                    background: sit.background,
+                    traits,
+                    responses: [
+                        'I didn\'t use those services.',
+                        'Please check my bill.',
+                        'I\'m not paying for your mistakes.',
+                        'The discount isn\'t showing up.',
+                        'Fix this or I\'ll cancel.',
+                        'I don\'t have the energy for partial solutions.',
+                        'Explain it to me like a normal person.'
+                    ],
+                    usedResponses: [],
+                    initialMessage: `Customer: Hello. I\'m calling about ${sit.main}. ${sit.background}. Please help me.`,
+                    outgoingFirstResponse: `Hello. I\'m calling about ${sit.main}. ${sit.background}. I need help with this.`
+                }, level);
+            }
+
+            const situations = [
+                { main: 'חיוב יתר', backgroundMale: 'קיבל חשבון גבוה מהצפוי על שירותים לא פעילים', backgroundFemale: 'קיבלה חשבון גבוה מהצפוי על שירותים לא פעילים' },
+                { main: 'שדרוג', backgroundMale: 'שדרגו אותו לאוטומציה נוספת שלא ביקש', backgroundFemale: 'שדרגו אותה לאוטומציה נוספת שלא ביקשה' },
+                { main: 'שימור', backgroundMale: 'הציעו לו הצעה לשימור, אבל החשבון יצא שונה מההבטחה', backgroundFemale: 'הציעו לה הצעה לשימור, אבל החשבון יצא שונה מההבטחה' },
+                { main: 'מעבר חברה', backgroundMale: 'במעבר לחברה שלכם הוא קיבל חשבון לא נכון', backgroundFemale: 'במעבר לחברה שלכם היא קיבלה חשבון לא נכון' },
+                { main: 'טעות בחוזה', backgroundMale: 'החוזה בו נרשם שונה ממה שסוכם בשיחה', backgroundFemale: 'החוזה בו נרשמה שונה ממה שסוכם בשיחה' },
+                { main: 'החבילה נגמרה', backgroundMale: 'החבילה שלו נגמרה מוקדם מהצפוי בלי הודעה', backgroundFemale: 'החבילה שלה נגמרה מוקדם מהצפוי בלי הודעה' },
+                { main: 'מחיר גבוהה מידי', backgroundMale: 'החיוב גבוה מדי ביחס למה שהובטח לו', backgroundFemale: 'החיוב גבוה מדי ביחס למה שהובטח לה' },
+                { main: 'קיבלתי מחיר זול יותר בחברה מתחרה', backgroundMale: 'החברה המתחרה הציעה לו מחיר נמוך יותר באותו מועד', backgroundFemale: 'החברה המתחרה הציעה לה מחיר נמוך יותר באותו מועד' }
+            ];
+            const traitsPool = ['עצבני', 'סקפטי', 'קר', 'לחוץ', 'חכם', 'מבולבל', 'מניפולטיבי', 'אדיש'];
+
+            const sit = situations[Math.floor(Math.random() * situations.length)];
+            const traits = selectRandomTraits(traitsPool);
+            const backgroundText = getGenderedText(identity.gender, sit.backgroundMale, sit.backgroundFemale);
+
+            return enrichScenarioWithDifficulty({
+                type: 'service',
+                gender: identity.gender,
+                name: identity.name,
+                age: ages[Math.floor(Math.random() * ages.length)],
+                situation: sit.main,
+                background: backgroundText,
+                traits,
+                responses: [
+                    'לא השתמשתי בשירותים האלה.',
+                    'תבדקו את החשבון שלי.',
+                    'אני לא משלם על טעויות שלכם.',
+                    'ההנחה לא מופיעה.',
+                    'תקנו את זה או אני מבטל.',
+                    'אין לי כוח לפתרונות חלקיים.',
+                    'תסבירו לי כמו בן אדם.'
+                ],
+                usedResponses: [],
+                initialMessage: `${getCustomerLabel(identity.gender)}: שלום. ${sit.main}. ${backgroundText}. תעזרו לי בבקשה.`,
+                outgoingFirstResponse: `שלום. אני פונה בנושא ${sit.main}. ${backgroundText}. ${getGenderedText(identity.gender, 'אני צריך עזרה בזה.', 'אני צריכה עזרה בזה.')}`
+            }, level);
+        }
+
+        function generateTechnicalScenario(level) {
+            const identity = createCustomerIdentity();
+            const ages = [30, 40, 50, 55, 65];
+
+            if (currentLanguage === 'en') {
+                const situationsEn = [
+                    { main: 'I can\'t make calls from my phone', background: 'The phone fails to connect to a call every time I try' },
+                    { main: 'I\'m not receiving text messages', background: 'Incoming messages don\'t arrive or disappear after sending' },
+                    { main: 'I have no internet', background: 'There\'s no mobile or home internet connection at all' },
+                    { main: 'I can\'t connect to my home internet', background: 'The router shows connected but the device loads nothing' }
+                ];
+                const traitsPoolEn = ['nervous', 'skeptical', 'cold', 'pressed', 'smart', 'confused', 'calculating', 'indifferent'];
+                const sit = situationsEn[Math.floor(Math.random() * situationsEn.length)];
+                const traits = selectRandomTraits(traitsPoolEn);
+                return enrichScenarioWithDifficulty({
+                    type: 'technical',
+                    gender: identity.gender,
+                    name: identity.name,
+                    age: ages[Math.floor(Math.random() * ages.length)],
+                    situation: sit.main,
+                    background: sit.background,
+                    traits,
+                    responses: [
+                        'The network doesn\'t work as promised.',
+                        'This is affecting my work.',
+                        'Fix it now.',
+                        'The internet is too slow.',
+                        'Calls keep dropping.',
+                        'I\'m not here to make excuses.',
+                        'Give me a real solution.'
+                    ],
+                    usedResponses: [],
+                    initialMessage: `Customer: Hello. ${sit.main}. ${sit.background}. What's going on?`,
+                    outgoingFirstResponse: `Hello. ${sit.main}. ${sit.background}. Can you help me fix this?`
+                }, level);
+            }
+
+            const situations = [
+                { mainMale: 'אני לא מצליח להוציא שיחה מהטלפון', mainFemale: 'אני לא מצליחה להוציא שיחה מהטלפון', background: 'הטלפון לא מצליח להתחבר לשיחה בכל פעם שמנסים להתקשר' },
+                { mainMale: 'לא מצליח לקבל הודעות טקסט', mainFemale: 'לא מצליחה לקבל הודעות טקסט', background: 'הודעות נכנסות לא מגיעות או נעלמות אחרי שליחה' },
+                { mainMale: 'אין לי אינטרנט', mainFemale: 'אין לי אינטרנט', background: 'אין חיבור אינטרנט סלולר או ביתי בכלל' },
+                { mainMale: 'לא מצליח להתחבר לאינטרנט הביתי', mainFemale: 'לא מצליחה להתחבר לאינטרנט הביתי', background: 'הנתב מראה חיבור אבל המכשיר לא טוען כלום' }
+            ];
+            const traitsPool = ['עצבני', 'סקפטי', 'קר', 'לחוץ', 'חכם', 'מבולבל', 'מניפולטיבי', 'אדיש'];
+
+            const sit = situations[Math.floor(Math.random() * situations.length)];
+            const traits = selectRandomTraits(traitsPool);
+            const mainText = getGenderedText(identity.gender, sit.mainMale, sit.mainFemale);
+
+            return enrichScenarioWithDifficulty({
+                type: 'technical',
+                gender: identity.gender,
+                name: identity.name,
+                age: ages[Math.floor(Math.random() * ages.length)],
+                situation: mainText,
+                background: sit.background,
+                traits,
+                responses: [
+                    'הרשת לא עובדת כפי שהובטח.',
+                    'זה פוגע בעבודה שלי.',
+                    'תתקנו את זה עכשיו.',
+                    'האינטרנט איטי מדי.',
+                    'שיחות נקטעות כל הזמן.',
+                    getGenderedText(identity.gender, 'אני לא בא לספר סיפורים.', 'אני לא באה לספר סיפורים.'),
+                    'תנו לי פתרון אמיתי.'
+                ],
+                usedResponses: [],
+                initialMessage: `${getCustomerLabel(identity.gender)}: שלום. ${mainText}. ${sit.background}. מה קורה?`,
+                outgoingFirstResponse: `שלום. ${mainText}. ${sit.background}. אפשר לעזור לי לפתור את זה?`
+            }, level);
+        }
+
+        function addMessage(text, type) {
+            const messageDiv = document.createElement('div');
+            messageDiv.className = 'message ' + type;
+            messageDiv.textContent = text;
+            chat.appendChild(messageDiv);
+            chat.scrollTop = chat.scrollHeight;
+            if (conversationStarted && type === 'agent' && /^(?:לקוח(?:ה)?|Customer):/.test(text)) {
+                trackCustomerMessageMetrics(text);
+                pendingCustomerMessageTimestamp = Date.now();
+                speakCustomerMessage(text);
+            }
+            // Reset inactivity timer whenever a message is added
+            if (conversationStarted) {
+                startInactivityTimer();
+            }
+        }
+
+        function generatePhoneNumber() {
+            return '05' + Math.floor(Math.random() * 90000000 + 10000000);
+        }
+
+        function generateIdNumber() {
+            return String(Math.floor(Math.random() * 900000000 + 100000000));
+        }
+
+        function simulateAgentResponse(userMessage) {
+            if (!currentScenario) {
+                return currentLanguage === 'en' ? 'I am waiting for your response.' : 'אני מחכה לתשובה שלכם.';
+            }
+            const lowerMessage = userMessage.toLowerCase();
+
+            if (currentLanguage === 'en') {
+                if (
+                    lowerMessage.includes('name') ||
+                    lowerMessage.includes('what is your name') ||
+                    lowerMessage.includes('who am i speaking with')
+                ) {
+                    return `My name is ${currentScenario.name}`;
+                }
+
+                if (lowerMessage.includes('phone') || lowerMessage.includes('number') || lowerMessage.includes('mobile')) {
+                    const phoneNumber = generatePhoneNumber();
+                    return `My phone number is ${phoneNumber}`;
+                }
+
+                if (lowerMessage.includes('id') || lowerMessage.includes('identification') || lowerMessage.includes('identity')) {
+                    const idNumber = generateIdNumber();
+                    return `My ID number is ${idNumber}`;
+                }
+
+                if (lowerMessage.includes('wait') || lowerMessage.includes('hold') || lowerMessage.includes('one moment')) {
+                    const holdResponsesEn = [
+                        'Okay, thank you.',
+                        'Alright, but please hurry.',
+                        'Okay, I will wait.',
+                        'Fine, just do not leave me waiting too long.'
+                    ];
+                    return holdResponsesEn[Math.floor(Math.random() * holdResponsesEn.length)];
+                }
+
+                if (!currentScenario.customerScenarioIntroductionSent) {
+                    currentScenario.customerScenarioIntroductionSent = true;
+                    const direction = loadConversationDirection();
+                    if (direction === 'outgoing') {
+                        return currentScenario.outgoingFirstResponse || currentScenario.initialMessage.replace(/^(?:לקוח(?:ה)?|Customer):\s*/, '');
+                    }
+                    return currentScenario.initialMessage.replace(/^(?:לקוח(?:ה)?|Customer):\s*/, '');
+                }
+
+                if (currentScenario.type === 'sales') {
+                    if (lowerMessage.includes('approval') || lowerMessage.includes('recording') || lowerMessage.includes('proof')) {
+                        return 'I do not buy that story, send me proper written confirmation.';
+                    }
+                    if (lowerMessage.includes('cancel') || lowerMessage.includes('refund') || lowerMessage.includes('credit')) {
+                        return 'If this is handled properly, maybe I will consider staying.';
+                    }
+                }
+                if (currentScenario.type === 'service') {
+                    if (lowerMessage.includes('discount') || lowerMessage.includes('price') || lowerMessage.includes('bill')) {
+                        return 'If this is corrected to the promised price, that would solve a lot.';
+                    }
+                }
+                if (currentScenario.type === 'technical') {
+                    if (lowerMessage.includes('technician') || lowerMessage.includes('check') || lowerMessage.includes('coverage')) {
+                        return 'My phone keeps failing, please handle this now.';
+                    }
+                }
+
+                let availableEn = currentScenario.responses.filter(r => !currentScenario.usedResponses.includes(r));
+                if (availableEn.length === 0) {
+                    currentScenario.usedResponses = [];
+                    availableEn = currentScenario.responses.slice();
+                }
+                const responseEn = availableEn[Math.floor(Math.random() * availableEn.length)];
+                currentScenario.usedResponses.push(responseEn);
+                return responseEn;
+            }
+
+            // Reveal name only when the agent explicitly asks for it.
+            if (
+                lowerMessage.includes('מה השם') ||
+                lowerMessage.includes('איך קוראים') ||
+                lowerMessage.includes('מה שמך') ||
+                lowerMessage.includes('שם הלקוח') ||
+                lowerMessage.includes('שם הלקוחה') ||
+                lowerMessage.includes('מה שמך המלא')
+            ) {
+                return `קוראים לי ${currentScenario.name}`;
+            }
+
+            // Check for phone number request
+            if (lowerMessage.includes('טלפון') || lowerMessage.includes('מספר טלפון') || lowerMessage.includes('פלאפון')) {
+                const phoneNumber = generatePhoneNumber();
+                return `המספר שלי הוא ${phoneNumber}`;
+            }
+
+            // Check for ID number request
+            if (lowerMessage.includes('תעודת זהות') || lowerMessage.includes('תעודת הזהות') || lowerMessage.includes('ת.ז') || lowerMessage.includes('מספר זהות') || lowerMessage.includes('תז')) {
+                const idNumber = generateIdNumber();
+                return `מספר תעודת הזהות שלי הוא ${idNumber}`;
+            }
+
+            // Check for hold/wait request
+            if (lowerMessage.includes('תמתין') || lowerMessage.includes('תמתיני') || lowerMessage.includes('אנא תמתין') || lowerMessage.includes('אנא תמתיני') || lowerMessage.includes('תמתינו') || lowerMessage.includes('המתן') || lowerMessage.includes('המתיני')) {
+                const holdResponses = [
+                    'בסדר תודה',
+                    'בסדר אבל תזדרז בבקשה',
+                    'אוקי אני אמתין',
+                    'בסדר רק אל תייבש אותי על הקו'
+                ];
+                return holdResponses[Math.floor(Math.random() * holdResponses.length)];
+            }
+
+            if (!currentScenario.customerScenarioIntroductionSent) {
+                currentScenario.customerScenarioIntroductionSent = true;
+                const direction = loadConversationDirection();
+                if (direction === 'outgoing') {
+                    return currentScenario.outgoingFirstResponse || currentScenario.initialMessage.replace(/^לקוח(?:ה)?:\s*/, '');
+                }
+                return currentScenario.initialMessage.replace(/^לקוח(?:ה)?:\s*/, '');
+            }
+
+            if (currentScenario.type === 'sales') {
+                if (lowerMessage.includes('אישור') || lowerMessage.includes('מי נתן') || lowerMessage.includes('הקלטה')) {
+                    return 'אני לא קונה את הסיפור הזה, תשלחו לי אישור מסודר.';
+                }
+                if (lowerMessage.includes('ביטול') || lowerMessage.includes('החזר') || lowerMessage.includes('זיכוי')) {
+                    return 'אם זה יטופל כראוי, אולי אשקול להישאר.';
+                }
+            }
+            if (currentScenario.type === 'service') {
+                if (lowerMessage.includes('הנחה') || lowerMessage.includes('מחיר') || lowerMessage.includes('חשבון')) {
+                    return 'אם זה יתוקן במחיר שהובטח, זה יפתור הרבה.';
+                }
+            }
+            if (currentScenario.type === 'technical') {
+                if (lowerMessage.includes('טכנאי') || lowerMessage.includes('בדיקה') || lowerMessage.includes('כיסוי')) {
+                    return 'הטלפון שלי נופל, תטפלו בזה עכשיו.';
+                }
+            }
+            let available = currentScenario.responses.filter(r => !currentScenario.usedResponses.includes(r));
+            if (available.length === 0) {
+                currentScenario.usedResponses = [];
+                available = currentScenario.responses.slice();
+            }
+            const response = available[Math.floor(Math.random() * available.length)];
+            currentScenario.usedResponses.push(response);
+            return response;
+        }
+
+        startBtn.addEventListener('click', async () => {
+            currentLanguage = localStorage.getItem('appLanguage') || 'he';
+            const agentFirstName = agentFirstNameInput.value.trim();
+            if (!agentFirstName) {
+                alert(S('alertNoName'));
+                agentFirstNameInput.focus();
+                return;
+            }
+
+            currentAgentFirstName = agentFirstName;
+
+            conversationStarted = true;
+            startBtn.disabled = true;
+            endBtn.disabled = false;
+            // Diagnostics: shown only when debug mode is enabled.
+            if (customerVoiceDebugMode && 'speechSynthesis' in window) {
+                const _allVoices = window.speechSynthesis.getVoices();
+                console.log('[TTS] All available voices:', _allVoices.map(v => `${v.name} [${v.lang}]`).join(' | '));
+                const _targetVoices = _allVoices.filter(v => isTargetLanguageVoice(v));
+                if (_targetVoices.length > 0) {
+                    const _voiceList = _targetVoices.map(v => `${v.name} (${v.lang}) — ${guessVoiceGender(v)}`).join(' | ');
+                    addMessageWithoutTimerReset((currentLanguage === 'en' ? `🔊 Available English voices: ${_voiceList}` : `🔊 קולות עבריים זמינים: ${_voiceList}`), 'system');
+                } else {
+                    addMessageWithoutTimerReset((currentLanguage === 'en' ? '⚠️ No English voices found. System voices: ' : '⚠️ לא נמצאו קולות עבריים. קולות כלל-מערכתיים: ') + _allVoices.slice(0, 6).map(v => v.name).join(' | '), 'system');
+                }
+            }
+            agentFirstNameInput.disabled = true;
+            messageInput.disabled = false;
+            sendBtn.disabled = false;
+            voiceBtn.disabled = !SpeechRecognitionClass;
+            updateVoiceButtonState();
+            setAnalysisButtonEnabled(false);
+            conversationStartTimestamp = Date.now();
+            pendingCustomerMessageTimestamp = null;
+            agentResponseDurationsMs = [];
+            lastAgentMessageTimestamp = null;
+            longestAgentGapMs = 0;
+            politenessCount = 0;
+            nameAddressCount = 0;
+            longPauseCount = 0;
+            agentMessageCount = 0;
+            customerMessageCount = 0;
+            repeatedIssueCount = 0;
+            detectedAgentName = '';
+            agentFirstMessage = null;
+            agentLastMessage = '';
+            openingScriptUsed = false;
+            closingScriptUsed = false;
+            offeredAdditionalHelp = false;
+            customerIdentificationRequested = false;
+            customerIssueOccurrences = new Map();
+            // Clear the chat content
+            chat.innerHTML = '';
+            const type = conversationType.value;
+            const selectedDifficulty = difficultyLevel.value;
+            if (type === 'sales') currentScenario = generateSalesScenario(selectedDifficulty);
+            else if (type === 'service') currentScenario = generateServiceScenario(selectedDifficulty);
+            else currentScenario = generateTechnicalScenario(selectedDifficulty);
+            const conversationDirection = loadConversationDirection();
+            const typeLabel = getProfessionalTypeLabel(type);
+            updateStatus('active', typeLabel, getDifficultyLabel(selectedDifficulty), getConversationModeLabel(currentScenario?.conversationMode?.key));
+            if (conversationDirection === 'incoming') {
+                currentScenario.customerScenarioIntroductionSent = false;
+                addMessage(S('incomingSystemMsg'), 'system');
+                // Start inactivity timer
+                startInactivityTimer();
+            } else {
+                currentScenario.customerScenarioIntroductionSent = false;
+                await playOutgoingDialTone(3000);
+                if (!conversationStarted) {
+                    return;
+                }
+                addMessage(getCustomerLabel() + ': ' + getOutgoingPickupGreeting(), 'agent');
+                // Start inactivity timer only after the dialing and pickup greeting.
+                startInactivityTimer();
+            }
+        });
+
+        endBtn.addEventListener('click', () => {
+            finalizeConversation(currentLanguage === 'en' ? 'Agent' : 'הסוכן', S('disconnectedMsg'));
+        });
+
+        sendBtn.addEventListener('click', () => {
+            if (!conversationStarted) return;
+            const message = messageInput.value.trim();
+            if (!message) return;
+
+            const now = Date.now();
+
+            if (pendingCustomerMessageTimestamp) {
+                agentResponseDurationsMs.push(now - pendingCustomerMessageTimestamp);
+                pendingCustomerMessageTimestamp = null;
+            }
+
+            if (lastAgentMessageTimestamp) {
+                const agentGapMs = now - lastAgentMessageTimestamp;
+                longestAgentGapMs = Math.max(longestAgentGapMs, agentGapMs);
+
+                const settings = parseMetricSettings();
+                if (agentGapMs > settings.targetLongPauseSeconds * 1000) {
+                    longPauseCount += 1;
+                }
+            }
+
+            lastAgentMessageTimestamp = now;
+            agentMessageCount += 1;
+            politenessCount += countPolitenessExpressions(message);
+            if (agentFirstMessage === null) {
+                agentFirstMessage = message;
+            }
+            agentLastMessage = message;
+            if (!detectedAgentName) {
+                detectedAgentName = extractAgentNameFromMessage(message);
+            }
+            if (!offeredAdditionalHelp && isAdditionalHelpOfferMessage(message)) {
+                offeredAdditionalHelp = true;
+            }
+            if (!customerIdentificationRequested && isCustomerIdentificationRequestMessage(message)) {
+                customerIdentificationRequested = true;
+            }
+            if (currentScenario?.name) {
+                const namePattern = new RegExp(escapeRegExp(currentScenario.name), 'g');
+                const nameMatches = message.match(namePattern);
+                nameAddressCount += nameMatches ? nameMatches.length : 0;
+            }
+
+            addMessage(`${S('youPrefix')}: ` + message, 'user');
+            messageInput.value = '';
+            
+            setTimeout(() => {
+                addMessage(getCustomerLabel() + ': ' + simulateAgentResponse(message), 'agent');
+                maybeQueueCustomerFollowUp();
+            }, 1000);
+        });
+
+        messageInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                sendBtn.click();
+            }
+        });
+
+        voiceBtn.addEventListener('click', () => {
+            toggleAgentVoiceInput();
+        });
+
+        initializeAgentVoiceInput();
+        setAnalysisButtonEnabled(false);
+        updateStatus('idle');
+    </script>
+</body>
+</html>

@@ -1,0 +1,1092 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>תוצאות ניתוח שיחה</title>
+    <style>
+        :root {
+            --bg: #eef3f7;
+            --surface: #ffffff;
+            --text: #1f2937;
+            --muted: #6b7280;
+            --primary: #2563eb;
+            --primary-soft: #dbeafe;
+            --border: rgba(15, 23, 42, 0.08);
+            --shadow: 0 20px 50px rgba(15, 23, 42, 0.08);
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            min-height: 100vh;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            color: var(--text);
+            background: linear-gradient(180deg, #eef3f7 0%, #f8fafc 100%);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 24px;
+        }
+
+        .page {
+            width: min(100%, 760px);
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 28px;
+            box-shadow: var(--shadow);
+            overflow: hidden;
+        }
+
+        .header {
+            padding: 80px 32px 20px;
+            background: #ffffff;
+            border-bottom: 1px solid var(--border);
+            position: relative;
+        }
+
+        .header h1 {
+            margin: 0;
+            font-size: 1.8rem;
+            letter-spacing: 0.01em;
+        }
+
+        .header p {
+            margin: 10px 0 0;
+            color: var(--muted);
+            line-height: 1.6;
+        }
+
+        .top-logo {
+            position: absolute;
+            top: 16px;
+            left: 16px;
+            width: 96px;
+            height: 96px;
+            object-fit: contain;
+        }
+
+        .home-link {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            padding: 8px 16px;
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            background: #f8fafc;
+            color: var(--text);
+            text-decoration: none;
+            font-size: 0.9rem;
+            transition: all 0.2s ease;
+        }
+
+        .home-link:hover {
+            background: var(--primary-soft);
+            border-color: var(--primary);
+            color: var(--primary);
+        }
+
+        .content {
+            padding: 32px;
+            display: grid;
+            gap: 16px;
+        }
+
+        .analysis-actions {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .action-btn {
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 10px 14px;
+            background: #f8fafc;
+            color: var(--text);
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .action-btn:hover {
+            background: var(--primary-soft);
+            border-color: var(--primary);
+            color: var(--primary);
+        }
+
+        .metric-card {
+            border: 1px solid var(--border);
+            border-radius: 18px;
+            background: #f8fafc;
+            padding: 20px;
+        }
+
+        .score-card {
+            border: 1px solid rgba(37, 99, 235, 0.2);
+            border-radius: 20px;
+            background: linear-gradient(135deg, #eff6ff 0%, #f8fafc 100%);
+            padding: 22px;
+        }
+
+        .score-top {
+            display: flex;
+            align-items: baseline;
+            justify-content: space-between;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        .score-title {
+            margin: 0;
+            color: #1e3a8a;
+            font-size: 1rem;
+            font-weight: 700;
+        }
+
+        .score-value {
+            margin: 8px 0 0;
+            font-size: 2.4rem;
+            line-height: 1;
+            font-weight: 800;
+            color: #1d4ed8;
+        }
+
+        .score-meta {
+            margin-top: 8px;
+            color: var(--muted);
+            font-size: 0.88rem;
+        }
+
+        .summary-strip {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            padding: 14px 16px;
+            border: 1px solid rgba(15, 23, 42, 0.08);
+            border-radius: 18px;
+            background: linear-gradient(135deg, #f8fafc 0%, #eef6ff 100%);
+        }
+
+        .summary-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 12px;
+            border-radius: 999px;
+            border: 1px solid rgba(15, 23, 42, 0.08);
+            background: #ffffff;
+            color: #334155;
+            font-size: 0.88rem;
+            font-weight: 700;
+        }
+
+        .difficulty-basic {
+            color: #075985;
+            background: #e0f2fe;
+            border-color: #7dd3fc;
+        }
+
+        .difficulty-intermediate {
+            color: #92400e;
+            background: #fef3c7;
+            border-color: #fcd34d;
+        }
+
+        .difficulty-advanced {
+            color: #991b1b;
+            background: #fee2e2;
+            border-color: #fca5a5;
+        }
+
+        .metric-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .metric-icon {
+            width: 34px;
+            height: 34px;
+            border-radius: 10px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1rem;
+            background: #e2e8f0;
+            color: #334155;
+        }
+
+        .metric-icon-disconnect {
+            position: relative;
+            font-size: 0;
+        }
+
+        .metric-icon-disconnect .phone {
+            color: #6b7280;
+            font-size: 1rem;
+            line-height: 1;
+        }
+
+        .metric-icon-disconnect .xmark {
+            position: absolute;
+            color: #dc2626;
+            font-size: 1.15rem;
+            font-weight: 700;
+            line-height: 1;
+            transform: translate(0, 0);
+        }
+
+        .metric-title {
+            margin: 0;
+            color: var(--muted);
+            font-size: 0.95rem;
+        }
+
+        .metric-value {
+            margin: 10px 0 0;
+            font-size: 1.6rem;
+            font-weight: 700;
+            color: var(--text);
+        }
+
+        .metric-subrow {
+            margin-top: 10px;
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .script-compare-row {
+            margin-top: 8px;
+            display: flex;
+            flex-direction: column;
+            gap: 3px;
+        }
+
+        .script-compare-label {
+            font-size: 0.78rem;
+            color: var(--muted);
+            font-weight: 600;
+        }
+
+        .script-compare-text {
+            font-size: 0.875rem;
+            padding: 6px 10px;
+            border-radius: 6px;
+            line-height: 1.5;
+            word-break: break-word;
+        }
+
+        .script-compare-text.configured {
+            background: #eff6ff;
+            border: 1px solid #bfdbfe;
+            color: #1e40af;
+        }
+
+        .script-compare-text.actual {
+            background: #f0fdf4;
+            border: 1px solid #bbf7d0;
+            color: #166534;
+        }
+
+        .target-chip {
+            display: inline-flex;
+            align-items: center;
+            padding: 4px 10px;
+            border-radius: 999px;
+            font-size: 0.85rem;
+            font-weight: 700;
+            border: 1px solid;
+        }
+
+        .chip-pass {
+            color: #166534;
+            background: #dcfce7;
+            border-color: #86efac;
+        }
+
+        .chip-fail {
+            color: #991b1b;
+            background: #fee2e2;
+            border-color: #fca5a5;
+        }
+
+        .chip-info {
+            color: #1e3a8a;
+            background: #dbeafe;
+            border-color: #93c5fd;
+        }
+
+        .target-text {
+            color: var(--muted);
+            font-size: 0.88rem;
+        }
+
+        .metric-feedback {
+            margin-top: 12px;
+            padding-top: 12px;
+            border-top: 1px dashed rgba(15, 23, 42, 0.12);
+            display: grid;
+            gap: 6px;
+        }
+
+        .feedback-label {
+            margin: 0;
+            font-size: 0.78rem;
+            font-weight: 700;
+            color: #334155;
+        }
+
+        .feedback-text {
+            margin: 0;
+            font-size: 0.88rem;
+            color: var(--muted);
+            line-height: 1.55;
+        }
+
+        .empty-state {
+            text-align: center;
+            color: var(--muted);
+            border: 1px dashed rgba(15, 23, 42, 0.2);
+            border-radius: 16px;
+            background: #f8fafc;
+            padding: 28px;
+        }
+
+        @media print {
+            .analysis-actions,
+            .home-link {
+                display: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="page">
+        <div class="header">
+            <img src="logo.png" alt="Logo" class="top-logo">
+            <a href="home.html" class="home-link">דף ראשי</a>
+            <h1>תוצאות ניתוח שיחה</h1>
+            <p>סיכום מדדי השיחה האחרונה לאחר ניתוח הביצועים</p>
+        </div>
+
+        <div class="content">
+            <div class="analysis-actions">
+                <button class="action-btn" id="exportCsvBtn" type="button">ייצוא CSV</button>
+                <button class="action-btn" id="exportPdfBtn" type="button">ייצוא PDF</button>
+            </div>
+            <div id="analysisContent"></div>
+        </div>
+    </div>
+
+    <script>
+        const metricSettingsKey = 'resultMetricSettings';
+        const analysisKey = 'lastConversationAnalysis';
+        const metricDefaults = {
+            targetAvgResponse: 5.0,
+            targetMaxResponse: 12.0,
+            targetConversationDuration: 240,
+            targetPolitenessCount: 3,
+            targetNameAddressCount: 1,
+            targetLongPauseSeconds: 30,
+            targetLongPauseCount: 0,
+            targetMinAgentCustomerRatio: 0.8,
+            targetMaxAgentCustomerRatio: 1.5,
+            targetMaxRepeatedIssueCount: 1
+        };
+
+        function loadMetricSettings() {
+            const raw = localStorage.getItem(metricSettingsKey);
+            if (!raw) {
+                return metricDefaults;
+            }
+
+            try {
+                const parsed = JSON.parse(raw);
+                return {
+                    targetAvgResponse: Number(parsed.targetAvgResponse ?? metricDefaults.targetAvgResponse),
+                    targetMaxResponse: Number(parsed.targetMaxResponse ?? metricDefaults.targetMaxResponse),
+                    targetConversationDuration: Number(parsed.targetConversationDuration ?? metricDefaults.targetConversationDuration),
+                    targetPolitenessCount: Number(parsed.targetPolitenessCount ?? metricDefaults.targetPolitenessCount),
+                    targetNameAddressCount: Number(parsed.targetNameAddressCount ?? metricDefaults.targetNameAddressCount),
+                    targetLongPauseSeconds: Number(parsed.targetLongPauseSeconds ?? metricDefaults.targetLongPauseSeconds),
+                    targetLongPauseCount: Number(parsed.targetLongPauseCount ?? metricDefaults.targetLongPauseCount),
+                    targetMinAgentCustomerRatio: Number(parsed.targetMinAgentCustomerRatio ?? metricDefaults.targetMinAgentCustomerRatio),
+                    targetMaxAgentCustomerRatio: Number(parsed.targetMaxAgentCustomerRatio ?? metricDefaults.targetMaxAgentCustomerRatio),
+                    targetMaxRepeatedIssueCount: Number(parsed.targetMaxRepeatedIssueCount ?? metricDefaults.targetMaxRepeatedIssueCount)
+                };
+            } catch (_err) {
+                return metricDefaults;
+            }
+        }
+
+        function getThresholdState(value, target) {
+            return value <= target
+                ? { chipClass: 'chip-pass', text: 'עומד ביעד' }
+                : { chipClass: 'chip-fail', text: 'חורג מהיעד' };
+        }
+
+        function getRangeThresholdState(value, minTarget, maxTarget) {
+            return value >= minTarget && value <= maxTarget
+                ? { chipClass: 'chip-pass', text: 'עומד ביעד' }
+                : { chipClass: 'chip-fail', text: 'לא מאוזן' };
+        }
+
+        function clamp01(value) {
+            return Math.max(0, Math.min(1, value));
+        }
+
+        function scoreLowerIsBetter(value, target) {
+            if (target <= 0) {
+                return value <= 0 ? 1 : 0;
+            }
+            if (value <= target) {
+                return 1;
+            }
+            return clamp01(target / value);
+        }
+
+        function scoreHigherIsBetter(value, target) {
+            if (target <= 0) {
+                return 1;
+            }
+            return clamp01(value / target);
+        }
+
+        function scoreRange(value, minTarget, maxTarget) {
+            if (minTarget > maxTarget) {
+                return 0;
+            }
+            if (value >= minTarget && value <= maxTarget) {
+                return 1;
+            }
+            if (value < minTarget) {
+                return minTarget > 0 ? clamp01(value / minTarget) : 0;
+            }
+            return value > 0 ? clamp01(maxTarget / value) : 0;
+        }
+
+        function buildCompositeScore(inputs) {
+            const weights = {
+                duration: 7,
+                disconnectedBy: 8,
+                averageResponse: 12,
+                maxResponse: 10,
+                politeness: 6,
+                nameAddress: 4,
+                longPause: 4,
+                ratio: 4,
+                script: 15,
+                repeatedIssue: 10,
+                additionalHelp: 8,
+                customerIdentification: 12
+            };
+
+            const components = [];
+
+            components.push({ key: 'duration', weight: weights.duration, score: scoreLowerIsBetter(inputs.durationSeconds, inputs.targetConversationDuration), available: true });
+            components.push({ key: 'disconnectedBy', weight: weights.disconnectedBy, score: inputs.disconnectedBy === 'הלקוח' ? 0 : 1, available: true });
+            components.push({ key: 'averageResponse', weight: weights.averageResponse, score: scoreLowerIsBetter(inputs.avgSeconds, inputs.targetAvgResponse), available: inputs.hasAverageResponseMetric });
+            components.push({ key: 'maxResponse', weight: weights.maxResponse, score: scoreLowerIsBetter(inputs.maxSeconds, inputs.targetMaxResponse), available: inputs.hasMaxResponseMetric });
+            components.push({ key: 'politeness', weight: weights.politeness, score: scoreHigherIsBetter(inputs.politenessCount, inputs.targetPolitenessCount), available: true });
+            components.push({ key: 'nameAddress', weight: weights.nameAddress, score: scoreHigherIsBetter(inputs.nameAddressCount, inputs.targetNameAddressCount), available: true });
+            components.push({ key: 'longPause', weight: weights.longPause, score: scoreLowerIsBetter(inputs.longPauseCount, inputs.targetLongPauseCount), available: true });
+            components.push({ key: 'ratio', weight: weights.ratio, score: scoreRange(inputs.agentCustomerRatio, inputs.targetMinAgentCustomerRatio, inputs.targetMaxAgentCustomerRatio), available: inputs.hasMessageRatioMetric });
+            components.push({ key: 'script', weight: weights.script, score: (() => {
+                const openingConfigured = inputs.openingScriptConfigured;
+                const closingConfigured = inputs.closingScriptConfigured;
+                if (!openingConfigured && !closingConfigured) return 0.5;
+                const parts = [];
+                if (openingConfigured) parts.push(inputs.openingScriptUsed === true ? 1 : 0);
+                if (closingConfigured) parts.push(inputs.closingScriptUsed === true ? 1 : 0);
+                return parts.reduce((a, b) => a + b, 0) / parts.length;
+            })(), available: inputs.openingScriptConfigured || inputs.closingScriptConfigured || false });
+            components.push({ key: 'repeatedIssue', weight: weights.repeatedIssue, score: scoreLowerIsBetter(inputs.repeatedIssueCount, inputs.targetMaxRepeatedIssueCount), available: true });
+            components.push({ key: 'additionalHelp', weight: weights.additionalHelp, score: inputs.offeredAdditionalHelp ? 1 : 0, available: true });
+            components.push({ key: 'customerIdentification', weight: weights.customerIdentification, score: inputs.customerIdentificationRequested ? 1 : 0, available: true });
+
+            const availableComponents = components.filter((component) => component.available);
+            const usedWeight = availableComponents.reduce((sum, component) => sum + component.weight, 0);
+            const weightedSum = availableComponents.reduce((sum, component) => sum + (component.score * component.weight), 0);
+            const normalizedScore = usedWeight > 0 ? (weightedSum / usedWeight) : 0;
+            const score100 = Math.round(normalizedScore * 100);
+
+            let level = 'נדרש שיפור';
+            if (score100 >= 85) {
+                level = 'מצוין';
+            } else if (score100 >= 70) {
+                level = 'טוב';
+            } else if (score100 >= 55) {
+                level = 'בינוני';
+            }
+
+            return {
+                score100,
+                level,
+                usedWeight
+            };
+        }
+
+        function createCsvText(rows) {
+            return rows.map((row) => row.map((value) => `"${String(value).replace(/"/g, '""')}"`).join(',')).join('\n');
+        }
+
+        function downloadCsv(rows) {
+            const csv = createCsvText(rows);
+            const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = 'conversation-analysis.csv';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            URL.revokeObjectURL(url);
+        }
+
+        function exportPdf() {
+            window.print();
+        }
+
+        function renderMetricFeedback(analysis, recommendation) {
+            return `
+                <div class="metric-feedback">
+                    <p class="feedback-label">פענוח מקצועי</p>
+                    <p class="feedback-text">${analysis}</p>
+                    <p class="feedback-label">מה מומלץ לעשות</p>
+                    <p class="feedback-text">${recommendation}</p>
+                </div>
+            `;
+        }
+
+        function getDifficultyClass(level) {
+            if (level === 'advanced') return 'difficulty-advanced';
+            if (level === 'intermediate') return 'difficulty-intermediate';
+            return 'difficulty-basic';
+        }
+
+        function getDomainFeedbackSuffix(domain) {
+            if (domain === 'sales') {
+                return {
+                    analysis: 'בשיחות מכירה המשמעות היא השפעה ישירה על אמון, הנעה והבשלה לעסקה.',
+                    recommendation: 'בשיחות מכירה שמור על הובלה, בהירות והצעת ערך בכל שלב.'
+                };
+            }
+            if (domain === 'service') {
+                return {
+                    analysis: 'בשיחות שירות זה משפיע ישירות על תחושת הוגנות, רוגע ואמון בתהליך הטיפול.',
+                    recommendation: 'בשיחות שירות חשוב במיוחד לשקף הבנה, להרגיע ולתת מסלול טיפול ברור.'
+                };
+            }
+            return {
+                analysis: 'בשיחות טכניות זה משפיע ישירות על תחושת מקצועיות, שליטה ואמינות הפתרון.',
+                recommendation: 'בשיחות טכניות חשוב למסגר שלבים, להסביר בדיקות ולשדר ודאות תפעולית.'
+            };
+        }
+
+        function renderAnalysis() {
+            const content = document.getElementById('analysisContent');
+            const raw = localStorage.getItem(analysisKey);
+
+            if (!raw) {
+                content.innerHTML = '<div class="empty-state">אין עדיין נתוני שיחה לניתוח. התחל שיחה בדף הסימולציה כדי לראות תוצאות.</div>';
+                document.getElementById('exportCsvBtn').disabled = true;
+                return;
+            }
+
+            const data = JSON.parse(raw);
+            const settings = loadMetricSettings();
+
+            const durationSeconds = Number(data.durationSeconds ?? 0);
+            const avgSeconds = Number(data.averageResponseSeconds ?? 0);
+            const maxSeconds = Number(data.maxResponseSeconds ?? 0);
+            const hasAverageResponseMetric = Boolean(data.hasAverageResponseMetric);
+            const averageResponseSampleCount = Number(data.averageResponseSampleCount ?? 0);
+            const hasMaxResponseMetric = Boolean(data.hasMaxResponseMetric);
+
+            const duration = data.durationLabel || '00:00';
+            const disconnectedBy = data.disconnectedBy || '-';
+            const professionalDomain = data.professionalDomain || 'technical';
+            const professionalDomainLabel = data.professionalDomainLabel || 'טכני';
+            const customerType = data.customerType || 'לא זוהה';
+            const customerPersonaSummary = data.customerPersonaSummary || 'ללא תיאור נוסף';
+            const conversationDirection = data.conversationDirection || 'incoming';
+            const conversationDirectionLabel = data.conversationDirectionLabel || (conversationDirection === 'outgoing' ? 'שיחה יוצאת' : 'שיחה נכנסת');
+            const conversationDirectionDisplayLabel = data.conversationDirectionDisplayLabel || (conversationDirection === 'outgoing' ? '📤 שיחה יוצאת' : '📥 שיחה נכנסת');
+            const scenarioDifficultyLevel = data.scenarioDifficultyLevel || 'basic';
+            const scenarioDifficultyLabel = data.scenarioDifficultyLabel || 'בסיסי';
+            const difficultyClass = getDifficultyClass(scenarioDifficultyLevel);
+            const domainFeedback = getDomainFeedbackSuffix(professionalDomain);
+            const averageResponse = hasAverageResponseMetric
+                ? (data.averageResponseLabel || '0.0 שניות')
+                : 'לא מספיק נתונים';
+            const maxResponse = hasMaxResponseMetric
+                ? (data.maxResponseLabel || '0.0 שניות')
+                : 'לא מספיק נתונים';
+            const politenessCount = Number(data.politenessCount ?? 0);
+            const politenessLabel = data.politenessLabel || `${politenessCount} שימושים`;
+            const nameAddressCount = Number(data.nameAddressCount ?? 0);
+            const nameAddressLabel = data.nameAddressLabel || `${nameAddressCount} פניות אישיות ללקוח/ה`;
+            const longPauseCount = Number(data.longPauseCount ?? 0);
+            const longPauseThresholdSeconds = Number(data.longPauseThresholdSeconds ?? settings.targetLongPauseSeconds);
+            const longPauseLabel = data.longPauseLabel || `${longPauseCount} הפסקות מעל ${longPauseThresholdSeconds} שניות`;
+            const hasMessageRatioMetric = Boolean(data.hasMessageRatioMetric);
+            const agentMessageCount = Number(data.agentMessageCount ?? 0);
+            const customerMessageCount = Number(data.customerMessageCount ?? 0);
+            const agentCustomerRatio = Number(data.agentCustomerRatio ?? 0);
+            const agentCustomerRatioLabel = hasMessageRatioMetric
+                ? (data.agentCustomerRatioLabel || `${agentMessageCount}:${customerMessageCount} (יחס ${agentCustomerRatio})`)
+                : 'לא מספיק נתונים';
+            const agentFirstName = data.agentFirstName || '';
+            const agentFirstMessage = data.agentFirstMessage || '';
+            const agentLastMessage = data.agentLastMessage || '';
+            const configuredOpeningScript = data.configuredOpeningScript || '';
+            const configuredClosingScript = data.configuredClosingScript || '';
+            const openingScriptConfigured = Boolean(data.openingScriptConfigured) || configuredOpeningScript.length > 0;
+            const closingScriptConfigured = Boolean(data.closingScriptConfigured) || configuredClosingScript.length > 0;
+            // openingScriptUsed / closingScriptUsed: true=pass, false=fail, null=not configured
+            const openingScriptUsed = data.openingScriptUsed;  // may be true/false/null
+            const closingScriptUsed = data.closingScriptUsed;  // may be true/false/null
+            const scriptComplianceLabel = (() => {
+                if (!openingScriptConfigured && !closingScriptConfigured) return 'לא הוגדר סקריפט';
+                const parts = [];
+                if (openingScriptConfigured) parts.push(`פתיחה: ${openingScriptUsed === true ? 'תואם ✓' : 'לא תואם ✗'}`);
+                if (closingScriptConfigured) parts.push(`סגירה: ${closingScriptUsed === true ? 'תואמת ✓' : 'לא תואמת ✗'}`);
+                return parts.join(' | ');
+            })();
+            const repeatedIssueCount = Number(data.repeatedIssueCount ?? 0);
+            const repeatedIssueLabel = data.repeatedIssueLabel || `${repeatedIssueCount} חזרות`;
+            const offeredAdditionalHelp = Boolean(data.offeredAdditionalHelp);
+            const offeredAdditionalHelpLabel = data.offeredAdditionalHelpLabel || (offeredAdditionalHelp ? 'כן' : 'לא');
+            const customerIdentificationRequested = Boolean(data.customerIdentificationRequested);
+            const customerIdentificationLabel = data.customerIdentificationLabel || (customerIdentificationRequested ? 'כן' : 'לא');
+
+            const durationState = getThresholdState(durationSeconds, settings.targetConversationDuration);
+            const avgState = hasAverageResponseMetric
+                ? getThresholdState(avgSeconds, settings.targetAvgResponse)
+                : { chipClass: 'chip-info', text: 'לא מספיק נתונים' };
+            const maxState = hasMaxResponseMetric
+                ? getThresholdState(maxSeconds, settings.targetMaxResponse)
+                : { chipClass: 'chip-info', text: 'לא מספיק נתונים' };
+
+            const disconnectState = disconnectedBy === 'הלקוח'
+                ? { chipClass: 'chip-fail', text: 'נותק על ידי הלקוח' }
+                : { chipClass: 'chip-info', text: 'נותק על ידי הסוכן' };
+            const politenessState = politenessCount >= settings.targetPolitenessCount
+                ? { chipClass: 'chip-pass', text: 'עומד ביעד' }
+                : { chipClass: 'chip-fail', text: 'לא עומד ביעד' };
+            const nameAddressState = nameAddressCount >= settings.targetNameAddressCount
+                ? { chipClass: 'chip-pass', text: 'עומד ביעד' }
+                : { chipClass: 'chip-fail', text: 'לא עומד ביעד' };
+            const longPauseState = longPauseCount <= settings.targetLongPauseCount
+                ? { chipClass: 'chip-pass', text: 'עומד ביעד' }
+                : { chipClass: 'chip-fail', text: 'יותר מדי הפסקות' };
+            const ratioState = hasMessageRatioMetric
+                ? getRangeThresholdState(agentCustomerRatio, settings.targetMinAgentCustomerRatio, settings.targetMaxAgentCustomerRatio)
+                : { chipClass: 'chip-info', text: 'לא מספיק נתונים' };
+            const scriptState = (() => {
+                if (!openingScriptConfigured && !closingScriptConfigured)
+                    return { chipClass: 'chip-info', text: 'לא הוגדר סקריפט' };
+                const openingOk = !openingScriptConfigured || openingScriptUsed === true;
+                const closingOk = !closingScriptConfigured || closingScriptUsed === true;
+                return openingOk && closingOk
+                    ? { chipClass: 'chip-pass', text: 'עומד בסקריפט' }
+                    : { chipClass: 'chip-fail', text: 'לא עומד בסקריפט' };
+            })();
+            const repeatedIssueState = repeatedIssueCount <= settings.targetMaxRepeatedIssueCount
+                ? { chipClass: 'chip-pass', text: 'עומד ביעד' }
+                : { chipClass: 'chip-fail', text: 'חזרתיות גבוהה' };
+            const additionalHelpState = offeredAdditionalHelp
+                ? { chipClass: 'chip-pass', text: 'בוצע' }
+                : { chipClass: 'chip-fail', text: 'לא בוצע' };
+            const customerIdentificationState = customerIdentificationRequested
+                ? { chipClass: 'chip-pass', text: 'בוצע' }
+                : { chipClass: 'chip-fail', text: 'לא בוצע' };
+
+            const difficultyFeedback = renderMetricFeedback(
+                scenarioDifficultyLabel === 'מתקדם'
+                    ? 'השיחה נבנתה עם לקוח תובעני יותר, לחץ גבוה יותר ותגובות המשך שמדמות מורכבות אמתית.'
+                    : scenarioDifficultyLabel === 'בינוני'
+                        ? 'השיחה כוללת מורכבות בינונית ודורשת הובלה יציבה, אך עדיין משאירה מקום לתיקון בזמן אמת.'
+                        : 'השיחה הוגדרה ברמת כניסה, ולכן הדגש הוא על שליטה בבסיס: פתיחה, אבחון, שירות וסגירה.',
+                scenarioDifficultyLabel === 'מתקדם'
+                    ? 'בתרחישים כאלה הקפד במיוחד על קצב תגובה, ניהול התנגדויות וסיכום ברור.'
+                    : scenarioDifficultyLabel === 'בינוני'
+                        ? 'שמור על מבנה שיחה מסודר כדי לא לאבד שליטה כשהלקוח מתחיל להפעיל לחץ.'
+                        : 'השתמש ברמה הזו כדי לייצב שגרות עבודה לפני מעבר ללקוח מאתגר יותר.'
+            );
+            const durationFeedback = renderMetricFeedback(
+                durationState.chipClass === 'chip-pass'
+                    ? `משך השיחה נשמר בטווח היעד, ולכן ניהול הזמן והובלת השיחה היו יעילים. ${domainFeedback.analysis}`
+                    : `משך השיחה חרג מהיעד, מה שמעיד על התעכבות, חזרתיות או קושי להוביל לפתרון. ${domainFeedback.analysis}`,
+                durationState.chipClass === 'chip-pass'
+                    ? `שמור על קצב כזה והמשך לעבור מהר יחסית מאבחון לפתרון ולסיכום. ${domainFeedback.recommendation}`
+                    : `קצר ניסוחים, בצע אבחון ממוקד יותר, וסגור שלבים בצורה ברורה כדי למנוע התפזרות. ${domainFeedback.recommendation}`
+            );
+            const disconnectFeedback = renderMetricFeedback(
+                disconnectedBy === 'הלקוח'
+                    ? `הלקוח בחר לנתק, וזה בדרך כלל משקף פגיעה בחוויית השירות או חוסר אמון בהתקדמות השיחה. ${domainFeedback.analysis}`
+                    : `השיחה הסתיימה ללא ניתוק מצד הלקוח, מה שמעיד על שליטה טובה יותר במסלול השיחה. ${domainFeedback.analysis}`,
+                disconnectedBy === 'הלקוח'
+                    ? `חזק אמפתיה, עדכונים יזומים וסיכום ביניים כדי להפחית סיכוי לנטישה. ${domainFeedback.recommendation}`
+                    : `המשך לסגור שיחות עם וידוא פתרון והצעת עזרה נוספת לפני סיום. ${domainFeedback.recommendation}`
+            );
+            const avgFeedback = renderMetricFeedback(
+                hasAverageResponseMetric
+                    ? (avgState.chipClass === 'chip-pass'
+                        ? `זמן התגובה הממוצע היה תקין, ולכן הקצב הנתפס של הסוכן היה טוב. ${domainFeedback.analysis}`
+                        : `זמן התגובה הממוצע היה איטי מהיעד, ולכן נוצר עומס או תחושת המתנה אצל הלקוח. ${domainFeedback.analysis}`)
+                    : 'לא היו מספיק דגימות כדי להסיק על זמן תגובה ממוצע.',
+                hasAverageResponseMetric
+                    ? (avgState.chipClass === 'chip-pass'
+                        ? `שמור על מהירות תגובה יציבה גם כשהלקוח משנה כיוון או לוחץ. ${domainFeedback.recommendation}`
+                        : `קצר את הזמן בין הודעות, גם אם עדיין אין פתרון מלא. עדכון ביניים עדיף על שתיקה. ${domainFeedback.recommendation}`)
+                    : 'בצע יותר חילופי הודעות מלאים בשיחה כדי לקבל מדד אמין יותר.'
+            );
+            const maxFeedback = renderMetricFeedback(
+                hasMaxResponseMetric
+                    ? (maxState.chipClass === 'chip-pass'
+                        ? 'לא הייתה השהיה חריגה במיוחד, ולכן גם הנקודה האיטית ביותר בשיחה נשמרה בשליטה.'
+                        : 'הייתה לפחות תגובה אחת איטית מאוד, וזו בדיוק הנקודה שפוגעת בחוויית הלקוח.')
+                    : 'לא היה מספיק מידע למדידת זמן התגובה הארוך ביותר.',
+                hasMaxResponseMetric
+                    ? (maxState.chipClass === 'chip-pass'
+                        ? 'המשך לשמור על רצף תגובתי גם כשנדרש בירור נוסף.'
+                        : 'זהה את המקומות שבהם אתה עוצר לחשוב, ושלח הודעת ביניים שמחזיקה את הלקוח מעודכן.')
+                    : 'דרוש רצף שיחה ארוך יותר כדי למדוד היטב את מדד השיא.'
+            );
+            const politenessFeedback = renderMetricFeedback(
+                politenessState.chipClass === 'chip-pass'
+                    ? `רמת השירות והנימוס עמדה ביעד, ולכן השיחה נשמעה מקצועית ומכבדת יותר. ${domainFeedback.analysis}`
+                    : `חסרו ביטויי שירות ונימוס, ולכן הטון עלול להישמע יבש, קצר או טכני מדי. ${domainFeedback.analysis}`,
+                politenessState.chipClass === 'chip-pass'
+                    ? `שמור על הנוסח האדיב גם תחת לחץ, בלי להאריך יתר על המידה. ${domainFeedback.recommendation}`
+                    : `שלב באופן טבעי תודה, התנצלות בעת צורך, ואמירות שירות כמו "אשמח לבדוק" או "תודה על הסבלנות". ${domainFeedback.recommendation}`
+            );
+            const nameAddressFeedback = renderMetricFeedback(
+                nameAddressState.chipClass === 'chip-pass'
+                    ? 'הייתה פנייה אישית מספקת ללקוח/ה, מה שמחזק חיבור ותחושת יחס אישי.'
+                    : 'לא הייתה מספיק פנייה אישית בשם, ולכן השיחה עלולה להישמע כללית ומרוחקת.',
+                nameAddressState.chipClass === 'chip-pass'
+                    ? 'המשך להשתמש בשם במינון נכון: בעיקר בפתיחה, בהכלה ובהובלה לסיכום.'
+                    : 'הכנס את שם הלקוח/ה לפחות פעם אחת בשלב אבחון או בעת הרגעה/סיכום.'
+            );
+            const longPauseFeedback = renderMetricFeedback(
+                longPauseState.chipClass === 'chip-pass'
+                    ? 'לא נרשמו יותר מדי הפסקות ארוכות, ולכן השיחה נשמרה זורמת.'
+                    : 'נרשמו הפסקות ארוכות מעבר ליעד, מה שפוגע בביטחון הלקוח ובתחושת המקצועיות.',
+                longPauseState.chipClass === 'chip-pass'
+                    ? 'שמור על נוכחות רציפה גם במצבי בירור.'
+                    : 'כאשר נדרש זמן בדיקה, שלח הודעת גישור קצרה במקום להשאיר את הלקוח בהמתנה שקטה.'
+            );
+            const ratioFeedback = renderMetricFeedback(
+                hasMessageRatioMetric
+                    ? (ratioState.chipClass === 'chip-pass'
+                        ? 'האיזון בין הסוכן ללקוח היה תקין, ולכן הייתה גם הקשבה וגם הובלה.'
+                        : 'יחס ההודעות לא היה מאוזן, מה שיכול להצביע על דיבור יתר או חוסר הובלה.')
+                    : 'לא היה מספיק מידע כדי לחשב יחס הודעות אמין.',
+                hasMessageRatioMetric
+                    ? (ratioState.chipClass === 'chip-pass'
+                        ? 'שמור על האיזון: שאל, הקשב, ואז הובל.'
+                        : 'אם היחס גבוה מדי, שאל יותר. אם נמוך מדי, הובל יותר את השיחה והצע צעדים ברורים.')
+                    : 'המשך שיחה עם יותר חילופי מסרים כדי למדוד איזון שיח.'
+            );
+            const scriptFeedback = renderMetricFeedback(
+                scriptState.chipClass === 'chip-pass'
+                    ? `הפתיחה והסגירה תאמו את הסקריפט הנדרש ולכן נשמר סטנדרט ארגוני עקבי. ${domainFeedback.analysis}`
+                    : scriptState.chipClass === 'chip-info'
+                        ? 'לא הוגדר סקריפט ולכן המדד לא בדק עמידה בנוסח פתיחה/סגירה.'
+                        : `הייתה חריגה מהסקריפט המוגדר בפתיחה או בסגירה, ולכן נפגעה האחידות המקצועית. ${domainFeedback.analysis}`,
+                scriptState.chipClass === 'chip-pass'
+                    ? `המשך לפתוח ולסגור שיחות בנוסח קבוע, במיוחד כשמדובר בשיחות לחץ. ${domainFeedback.recommendation}`
+                    : scriptState.chipClass === 'chip-info'
+                        ? 'הגדר סקריפט בדף ההגדרות כדי להפוך את המדד לאפקטיבי.'
+                        : `תרגל את משפט הפתיחה והסגירה המדויקים עד שהם יוצאים טבעי גם בזמן אמת. ${domainFeedback.recommendation}`
+            );
+            const repeatedIssueFeedback = renderMetricFeedback(
+                repeatedIssueState.chipClass === 'chip-pass'
+                    ? 'הלקוח לא נאלץ לחזור על עצמו יותר מדי, מה שמעיד על הקשבה ואבחון טובים.'
+                    : 'הלקוח חזר על הבעיה יותר מדי פעמים, מה שמעיד שהשיקוף או ההבנה הראשונית לא היו מספיק ברורים.',
+                repeatedIssueState.chipClass === 'chip-pass'
+                    ? 'המשך לשקף את הבעיה במילים שלך כדי לאשר הבנה מוקדם.'
+                    : 'אחרי תיאור הבעיה, בצע שיקוף קצר: "אם אני מבין נכון..." כדי לצמצם חזרתיות.'
+            );
+            const additionalHelpFeedback = renderMetricFeedback(
+                additionalHelpState.chipClass === 'chip-pass'
+                    ? 'הסוכן הציע עזרה נוספת, ולכן הסיום שידר שירותיות והרחבת אחריות.'
+                    : 'לא הוצעה עזרה נוספת, ולכן הסיום היה פונקציונלי אך פחות שירותי.',
+                additionalHelpState.chipClass === 'chip-pass'
+                    ? 'שמור על ההרגל הזה כחלק קבוע לפני סגירת שיחה.'
+                    : 'לפני סיום, שאל באופן ישיר אם יש עוד משהו שניתן לסייע בו.'
+            );
+            const customerIdentificationFeedback = renderMetricFeedback(
+                customerIdentificationState.chipClass === 'chip-pass'
+                    ? `בוצע זיהוי לקוח, ולכן תהליך השירות נשען על אימות בסיסי תקין. ${domainFeedback.analysis}`
+                    : `לא בוצע זיהוי לקוח, ולכן חסר שלב תפעולי חשוב לפני טיפול מעמיק. ${domainFeedback.analysis}`,
+                customerIdentificationState.chipClass === 'chip-pass'
+                    ? `המשך לבצע אימות מוקדם ובצורה טבעית בתחילת השיחה. ${domainFeedback.recommendation}`
+                    : `שלב בקביעות בקשת שם, תעודת זהות, מספר לקוח או טלפון בהתאם לסוג השיחה. ${domainFeedback.recommendation}`
+            );
+
+            const compositeScore = buildCompositeScore({
+                durationSeconds,
+                disconnectedBy,
+                avgSeconds,
+                maxSeconds,
+                hasAverageResponseMetric,
+                hasMaxResponseMetric,
+                politenessCount,
+                nameAddressCount,
+                longPauseCount,
+                hasMessageRatioMetric,
+                agentCustomerRatio,
+                openingScriptUsed: openingScriptUsed === true,
+                closingScriptUsed: closingScriptUsed === true,
+                openingScriptConfigured,
+                closingScriptConfigured,
+                repeatedIssueCount,
+                offeredAdditionalHelp,
+                customerIdentificationRequested,
+                targetConversationDuration: settings.targetConversationDuration,
+                targetAvgResponse: settings.targetAvgResponse,
+                targetMaxResponse: settings.targetMaxResponse,
+                targetPolitenessCount: settings.targetPolitenessCount,
+                targetNameAddressCount: settings.targetNameAddressCount,
+                targetLongPauseCount: settings.targetLongPauseCount,
+                targetMinAgentCustomerRatio: settings.targetMinAgentCustomerRatio,
+                targetMaxAgentCustomerRatio: settings.targetMaxAgentCustomerRatio,
+                targetMaxRepeatedIssueCount: settings.targetMaxRepeatedIssueCount
+            });
+
+            content.innerHTML = `
+                <div class="score-card">
+                    <div class="score-top">
+                        <div>
+                            <p class="score-title">ציון משוכלל לשיחה</p>
+                            <p class="score-value">${compositeScore.score100}</p>
+                        </div>
+                        <span class="target-chip ${compositeScore.score100 >= 70 ? 'chip-pass' : 'chip-fail'}">${compositeScore.level}</span>
+                    </div>
+                    <div class="score-meta">חישוב על בסיס משוקלל לפי חשיבות המדדים | כיסוי משקל: ${compositeScore.usedWeight}%</div>
+                </div>
+                <div class="summary-strip">
+                    <span class="summary-pill">👤 שם הסוכן: ${agentFirstName || '(לא הוזן)'}</span>
+                    <span class="summary-pill">🧭 תחום מקצועי: ${professionalDomainLabel}</span>
+                    <span class="summary-pill">🧑 סוג לקוח: ${customerType}</span>
+                    <span class="summary-pill">📞 ${conversationDirectionDisplayLabel}</span>
+                    <span class="summary-pill ${difficultyClass}">🎯 רמת קושי: ${scenarioDifficultyLabel}</span>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-header">
+                        <span class="metric-icon">🎯</span>
+                        <p class="metric-title">רמת קושי</p>
+                    </div>
+                    <p class="metric-value">${scenarioDifficultyLabel}</p>
+                    <div class="metric-subrow">
+                        <span class="target-chip chip-info">נתון תצוגה</span>
+                    </div>
+                    ${difficultyFeedback}
+                </div>
+                <div class="metric-card">
+                    <div class="metric-header">
+                        <span class="metric-icon">⏱️</span>
+                        <p class="metric-title">זמן משך השיחה</p>
+                    </div>
+                    <p class="metric-value">${duration}</p>
+                    <div class="metric-subrow">
+                        <span class="target-chip ${durationState.chipClass}">${durationState.text}</span>
+                        <span class="target-text">יעד: ${settings.targetConversationDuration} שניות</span>
+                    </div>
+                    ${durationFeedback}
+                </div>
+                <div class="metric-card">
+                    <div class="metric-header">
+                        <span class="metric-icon metric-icon-disconnect"><span class="phone">☎︎</span><span class="xmark">✕</span></span>
+                        <p class="metric-title">מי יזם את ניתוק השיחה</p>
+                    </div>
+                    <p class="metric-value">${disconnectedBy}</p>
+                    <div class="metric-subrow">
+                        <span class="target-chip ${disconnectState.chipClass}">${disconnectState.text}</span>
+                    </div>
+                    ${disconnectFeedback}
+                </div>
+                <div class="metric-card">
+                    <div class="metric-header">
+                        <span class="metric-icon">⚡</span>
+                        <p class="metric-title">זמן תגובה ממוצע בין הודעה להודעה של הסוכן</p>
+                    </div>
+                    <p class="metric-value">${averageResponse}</p>
+                    <div class="metric-subrow">
+                        <span class="target-chip ${avgState.chipClass}">${avgState.text}</span>
+                        <span class="target-text">יעד: ${settings.targetAvgResponse} שניות${hasAverageResponseMetric ? '' : ` | דגימות: ${averageResponseSampleCount}`}</span>
+                    </div>
+                    ${avgFeedback}
+                </div>
+                <div class="metric-card">
+                    <div class="metric-header">
+                        <span class="metric-icon">🐢</span>
+                        <p class="metric-title">משך זמן התגובה הארוך ביותר של הסוכן בין הודעה להודעה</p>
+                    </div>
+                    <p class="metric-value">${maxResponse}</p>
+                    <div class="metric-subrow">
+                        <span class="target-chip ${maxState.chipClass}">${maxState.text}</span>
+                        <span class="target-text">יעד: ${settings.targetMaxResponse} שניות</span>
+                    </div>
+                    ${maxFeedback}
+                </div>
+                <div class="metric-card">
+                    <div class="metric-header">
+                        <span class="metric-icon">🙏</span>
+                        <p class="metric-title">שירות ונימוס</p>
+                    </div>
+                    <p class="metric-value">${politenessLabel}</p>
+                    <div class="metric-subrow">
+                        <span class="target-chip ${politenessState.chipClass}">${politenessState.text}</span>
+                        <span class="target-text">יעד: לפחות ${settings.targetPolitenessCount} ביטויי נימוס</span>
+                    </div>
+                    ${politenessFeedback}
+                </div>
+                <div class="metric-card">
+                    <div class="metric-header">
+                        <span class="metric-icon">👤</span>
+                        <p class="metric-title">מספר הפעמים שהסוכן פנה ללקוח/ה בשמו</p>
+                    </div>
+                    <p class="metric-value">${nameAddressLabel}</p>
+                    <div class="metric-subrow">
+                        <span class="target-chip ${nameAddressState.chipClass}">${nameAddressState.text}</span>
+                        <span class="target-text">יעד: לפחות ${settings.targetNameAddressCount} פניות אישיות ללקוח/ה</span>
+                    </div>
+                    ${nameAddressFeedback}
+                </div>
+                <div class="metric-card">
+                    <div class="metric-header">
+                        <span class="metric-icon">⏸️</span>
+                        <p class="metric-title">מספר הפסקות ארוכות</p>
+                    </div>
+                    <p class="metric-value">${longPauseLabel}</p>
+                    <div class="metric-subrow">
+                        <span class="target-chip ${longPauseState.chipClass}">${longPauseState.text}</span>
+                        <span class="target-text">יעד: עד ${settings.targetLongPauseCount} הפסקות מעל ${settings.targetLongPauseSeconds} שניות</span>
+                    </div>
+                    ${longPauseFeedback}
+                </div>
+                <div class="metric-card">
+                    <div class="metric-header">
+                        <span class="metric-icon">⚖️</span>
+                        <p class="metric-title">יחס הודעות סוכן/לקוח</p>
+                    </div>
+                    <p class="metric-value">${agentCustomerRatioLabel}</p>
+                    <div class="metric-subrow">
+                        <span class="target-chip ${ratioState.chipClass}">${ratioState.text}</span>
+                        <span class="target-text">יעד: יחס בין ${settings.targetMinAgentCustomerRatio} ל-${settings.targetMaxAgentCustomerRatio}</span>
+                    </div>
+                    ${ratioFeedback}
+                </div>
+                <div class="metric-card">
+                    <div class="metric-header">
+                        <span class="metric-icon">🧩</span>
+                        <p class="metric-title">עמידה בסקריפט פתיחה/סגירה</p>
+                    </div>
+                    <p class="metric-value">${scriptComplianceLabel}</p>
+                    <div class="script-compare-row">
+                        <div class="script-compare-label">👤 שם הסוכן להשוואה:</div>
+                        <div class="script-compare-text configured">${agentFirstName || '(לא הוזן)'}</div>
+                    </div>
+                    ${openingScriptConfigured ? `
+                    <div class="script-compare-row">
+                        <div class="script-compare-label">📥 פתיחה מוגדרת:</div>
+                        <div class="script-compare-text configured">${configuredOpeningScript || '—'}</div>
+                    </div>
+                    <div class="script-compare-row">
+                        <div class="script-compare-label">🗣️ אמר הסוכן:</div>
+                        <div class="script-compare-text actual">${agentFirstMessage || '(אין הודעה)'}</div>
+                    </div>` : ''}
+                    ${closingScriptConfigured ? `
+                    <div class="script-compare-row">
+                        <div class="script-compare-label">👋 סגירה מוגדרת:</div>
+                        <div class="script-compare-text configured">${configuredClosingScript || '—'}</div>
+                    </div>
+                    <div class="script-compare-row">
+                        <div class="script-compare-label">🗣️ אמר הסוכן:</div>
+                        <div class="script-compare-text actual">${agentLastMessage || '(אין הודעה)'}</div>
+                    </div>` : ''}
+                    <div class="metric-subrow">
+                        <span class="target-chip ${scriptState.chipClass}">${scriptState.text}</span>
+                        <span class="target-text">יעד: פתיחה וסגירה תקניות</span>
+                    </div>
+                    ${scriptFeedback}
+                </div>
+                <div class="metric-card">
+                    <div class="metric-header">
+                        <span class="metric-icon">🔁</span>
+                        <p class="metric-title">מספר הפעמים שהלקוח חזר על הבעיה</p>
+                    </div>
+                    <p class="metric-value">${repeatedIssueLabel}</p>
+                    <div class="metric-subrow">
+                        <span class="target-chip ${repeatedIssueState.chipClass}">${repeatedIssueState.text}</span>
+                        <span class="target-text">יעד: עד ${settings.targetMaxRepeatedIssueCount} חזרות</span>
+                    </div>
+                    ${repeatedIssueFeedback}
+                </div>
+                <div class="metric-card">
+                    <div class="metric-header">
+                        <span class="metric-icon">🤝</span>
+                        <p class="metric-title">הצעת עזרה נוספת</p>
+                    </div>
+                    <p class="metric-value">${offeredAdditionalHelpLabel}</p>
+                    <div class="metric-subrow">
+                        <span class="target-chip ${additionalHelpState.chipClass}">${additionalHelpState.text}</span>
+                        <span class="target-text">יעד: בוצע</span>
+                    </div>
+                    ${additionalHelpFeedback}
+                </div>
+                <div class="metric-card">
+                    <div class="metric-header">
+                        <span class="metric-icon">🪪</span>
+                        <p class="metric-title">זיהוי לקוח</p>
+                    </div>
+                    <p class="metric-value">${customerIdentificationLabel}</p>
+                    <div class="metric-subrow">
+                        <span class="target-chip ${customerIdentificationState.chipClass}">${customerIdentificationState.text}</span>
+                        <span class="target-text">יעד: בוצע</span>
+                    </div>
+                    ${customerIdentificationFeedback}
+                </div>
+            `;
+
+            const csvRows = [
+                ['מדד', 'ערך בפועל', 'יעד', 'סטטוס'],
+                ['ציון משוכלל לשיחה', `${compositeScore.score100}`, '0-100', compositeScore.level],
+                ['שם הסוכן', agentFirstName || '(לא הוזן)', '-', 'נתון תצוגה'],
+                ['סוג לקוח', customerType, '-', 'נתון תצוגה'],
+                ['סוג השיחה', conversationDirectionDisplayLabel, '-', 'נתון תצוגה'],
+                ['רמת קושי', scenarioDifficultyLabel, '-', 'נתון תצוגה'],
+                ['זמן משך השיחה', duration, `${settings.targetConversationDuration} שניות`, durationState.text],
+                ['מי יזם את ניתוק השיחה', disconnectedBy, '-', disconnectState.text],
+                ['זמן תגובה ממוצע בין הודעה להודעה של הסוכן', averageResponse, `${settings.targetAvgResponse} שניות`, avgState.text],
+                ['משך זמן התגובה הארוך ביותר של הסוכן בין הודעה להודעה', maxResponse, `${settings.targetMaxResponse} שניות`, maxState.text],
+                ['שירות ונימוס', politenessLabel, `לפחות ${settings.targetPolitenessCount} ביטויי נימוס`, politenessState.text],
+                ['מספר הפעמים שהסוכן פנה ללקוח/ה בשמו', nameAddressLabel, `לפחות ${settings.targetNameAddressCount} פניות אישיות ללקוח/ה`, nameAddressState.text],
+                ['מספר הפסקות ארוכות', longPauseLabel, `עד ${settings.targetLongPauseCount} הפסקות מעל ${settings.targetLongPauseSeconds} שניות`, longPauseState.text],
+                ['יחס הודעות סוכן/לקוח', agentCustomerRatioLabel, `יחס בין ${settings.targetMinAgentCustomerRatio} ל-${settings.targetMaxAgentCustomerRatio}`, ratioState.text],
+                ['עמידה בסקריפט פתיחה/סגירה', scriptComplianceLabel, 'פתיחה וסגירה תקניות', scriptState.text],
+                ['מספר הפעמים שהלקוח חזר על הבעיה', repeatedIssueLabel, `עד ${settings.targetMaxRepeatedIssueCount} חזרות`, repeatedIssueState.text],
+                ['הצעת עזרה נוספת', offeredAdditionalHelpLabel, 'בוצע', additionalHelpState.text],
+                ['זיהוי לקוח', customerIdentificationLabel, 'בוצע', customerIdentificationState.text]
+            ];
+
+            const exportCsvBtn = document.getElementById('exportCsvBtn');
+            exportCsvBtn.disabled = false;
+            exportCsvBtn.onclick = () => downloadCsv(csvRows);
+        }
+
+        document.getElementById('exportPdfBtn').addEventListener('click', exportPdf);
+        document.addEventListener('DOMContentLoaded', renderAnalysis);
+    </script>
+</body>
+</html>

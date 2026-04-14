@@ -1,0 +1,412 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>הגדרות מדדי תוצאה</title>
+    <style>
+        :root {
+            --bg: #eef3f7;
+            --surface: #ffffff;
+            --text: #1f2937;
+            --muted: #6b7280;
+            --primary: #2563eb;
+            --primary-soft: #dbeafe;
+            --border: rgba(15, 23, 42, 0.08);
+            --shadow: 0 20px 50px rgba(15, 23, 42, 0.08);
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            min-height: 100vh;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            color: var(--text);
+            background: linear-gradient(180deg, #eef3f7 0%, #f8fafc 100%);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 24px;
+        }
+
+        .page {
+            width: min(100%, 760px);
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 28px;
+            box-shadow: var(--shadow);
+            overflow: hidden;
+        }
+
+        .header {
+            padding: 80px 32px 20px;
+            background: #ffffff;
+            border-bottom: 1px solid var(--border);
+            position: relative;
+        }
+
+        .header h1 {
+            margin: 0;
+            font-size: 1.8rem;
+            letter-spacing: 0.01em;
+        }
+
+        .header p {
+            margin: 10px 0 0;
+            color: var(--muted);
+            line-height: 1.6;
+        }
+
+        .top-logo {
+            position: absolute;
+            top: 16px;
+            left: 16px;
+            width: 96px;
+            height: 96px;
+            object-fit: contain;
+        }
+
+        .home-link {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            padding: 8px 16px;
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            background: #f8fafc;
+            color: var(--text);
+            text-decoration: none;
+            font-size: 0.9rem;
+            transition: all 0.2s ease;
+        }
+
+        .home-link:hover {
+            background: var(--primary-soft);
+            border-color: var(--primary);
+            color: var(--primary);
+        }
+
+        .content {
+            padding: 32px;
+            display: grid;
+            gap: 18px;
+        }
+
+        .setting-item {
+            display: grid;
+            gap: 10px;
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            background: #f8fafc;
+            padding: 16px;
+        }
+
+        .setting-item label {
+            font-weight: 600;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .setting-icon {
+            width: 28px;
+            height: 28px;
+            border-radius: 8px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            background: #e2e8f0;
+            color: #334155;
+            font-size: 0.95rem;
+        }
+
+        .setting-item small {
+            color: var(--muted);
+        }
+
+        .setting-input-row {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        input[type="number"] {
+            width: 120px;
+            padding: 8px 10px;
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            font-size: 1rem;
+            text-align: center;
+            background: #ffffff;
+        }
+
+        .actions {
+            display: flex;
+            gap: 12px;
+        }
+
+        .save-btn,
+        .reset-btn {
+            border: none;
+            border-radius: 12px;
+            padding: 12px 16px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        .save-btn {
+            background: var(--primary);
+            color: #ffffff;
+        }
+
+        .reset-btn {
+            background: #e5e7eb;
+            color: #1f2937;
+        }
+
+        .success-message {
+            display: none;
+            border: 1px solid #86efac;
+            background: #dcfce7;
+            color: #166534;
+            border-radius: 12px;
+            padding: 12px;
+            text-align: center;
+            font-weight: 600;
+        }
+
+        @media (max-width: 640px) {
+            .actions {
+                flex-direction: column;
+            }
+
+            .save-btn,
+            .reset-btn {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="page">
+        <div class="header">
+            <img src="logo.png" alt="Logo" class="top-logo">
+            <a href="home.html" class="home-link">דף ראשי</a>
+            <h1>הגדרות מדדי תוצאה</h1>
+            <p>הגדר את ערכי היעד למדדי ביצוע בדוח ניתוח השיחה</p>
+        </div>
+
+        <div class="content">
+            <div class="setting-item">
+                <label for="targetAvgResponse"><span class="setting-icon">⚡</span>יעד זמן תגובה ממוצע</label>
+                <small>זמן מטרה בין הודעות של הסוכן.</small>
+                <div class="setting-input-row">
+                    <input type="number" id="targetAvgResponse" min="0.5" step="0.1" value="5.0">
+                    <span>שניות</span>
+                </div>
+            </div>
+
+            <div class="setting-item">
+                <label for="targetMaxResponse"><span class="setting-icon">🐢</span>יעד זמן תגובה מקסימלי</label>
+                <small>הזמן הארוך ביותר המותר להודעה אחת.</small>
+                <div class="setting-input-row">
+                    <input type="number" id="targetMaxResponse" min="1" step="0.1" value="12.0">
+                    <span>שניות</span>
+                </div>
+            </div>
+
+            <div class="setting-item">
+                <label for="targetConversationDuration"><span class="setting-icon">⏱️</span>יעד משך שיחה</label>
+                <small>משך שיחה רצוי לסיום טיפול מלא.</small>
+                <div class="setting-input-row">
+                    <input type="number" id="targetConversationDuration" min="10" step="1" value="240">
+                    <span>שניות</span>
+                </div>
+            </div>
+
+            <div class="setting-item">
+                <label for="targetPolitenessCount"><span class="setting-icon">🙏</span>יעד מינימלי לביטויי נימוס</label>
+                <small>מספר ביטויי הנימוס המינימלי לעמידה ביעד השירות והנימוס.</small>
+                <div class="setting-input-row">
+                    <input type="number" id="targetPolitenessCount" min="1" step="1" value="3">
+                    <span>ביטויים</span>
+                </div>
+            </div>
+
+            <div class="setting-item">
+                <label for="targetNameAddressCount"><span class="setting-icon">👤</span>יעד מינימלי לפניה בשם הלקוח/ה</label>
+                <small>כמה פעמים לפחות הסוכן צריך לפנות ללקוח/ה בשמם במהלך השיחה.</small>
+                <div class="setting-input-row">
+                    <input type="number" id="targetNameAddressCount" min="0" step="1" value="1">
+                    <span>פניות</span>
+                </div>
+            </div>
+
+            <div class="setting-item">
+                <label for="targetLongPauseSeconds"><span class="setting-icon">⏸️</span>סף הפסקה ארוכה</label>
+                <small>כל פער מעל ערך זה בין הודעות הסוכן ייחשב כהפסקה ארוכה.</small>
+                <div class="setting-input-row">
+                    <input type="number" id="targetLongPauseSeconds" min="5" step="1" value="30">
+                    <span>שניות</span>
+                </div>
+            </div>
+
+            <div class="setting-item">
+                <label for="targetLongPauseCount"><span class="setting-icon">📉</span>יעד מקסימלי להפסקות ארוכות</label>
+                <small>כמה הפסקות ארוכות מותרות בשיחה ועדיין לעמוד ביעד.</small>
+                <div class="setting-input-row">
+                    <input type="number" id="targetLongPauseCount" min="0" step="1" value="0">
+                    <span>הפסקות</span>
+                </div>
+            </div>
+
+            <div class="setting-item">
+                <label for="targetMinAgentCustomerRatio"><span class="setting-icon">⚖️</span>יעד מינימלי ליחס הודעות סוכן/לקוח</label>
+                <small>גבול תחתון לאיזון יחס ההודעות בין הסוכן ללקוח.</small>
+                <div class="setting-input-row">
+                    <input type="number" id="targetMinAgentCustomerRatio" min="0.1" step="0.1" value="0.8">
+                    <span>יחס</span>
+                </div>
+            </div>
+
+            <div class="setting-item">
+                <label for="targetMaxAgentCustomerRatio"><span class="setting-icon">⚖️</span>יעד מקסימלי ליחס הודעות סוכן/לקוח</label>
+                <small>גבול עליון לאיזון יחס ההודעות בין הסוכן ללקוח.</small>
+                <div class="setting-input-row">
+                    <input type="number" id="targetMaxAgentCustomerRatio" min="0.1" step="0.1" value="1.5">
+                    <span>יחס</span>
+                </div>
+            </div>
+
+            <div class="setting-item">
+                <label for="targetMaxRepeatedIssueCount"><span class="setting-icon">🔁</span>יעד מקסימלי לחזרת הלקוח על הבעיה</label>
+                <small>מספר החזרות המקסימלי שבו הלקוח חוזר על אותה בעיה ועדיין עומדים ביעד.</small>
+                <div class="setting-input-row">
+                    <input type="number" id="targetMaxRepeatedIssueCount" min="0" step="1" value="1">
+                    <span>חזרות</span>
+                </div>
+            </div>
+
+            <div class="actions">
+                <button class="save-btn" id="saveBtn">שמור הגדרות</button>
+                <button class="reset-btn" id="resetBtn">איפוס לברירת מחדל</button>
+            </div>
+
+            <div class="success-message" id="successMessage">ההגדרות נשמרו בהצלחה.</div>
+        </div>
+    </div>
+
+    <script>
+        const storageKey = 'resultMetricSettings';
+        const defaults = {
+            targetAvgResponse: 5.0,
+            targetMaxResponse: 12.0,
+            targetConversationDuration: 240,
+            targetPolitenessCount: 3,
+            targetNameAddressCount: 1,
+            targetLongPauseSeconds: 30,
+            targetLongPauseCount: 0,
+            targetMinAgentCustomerRatio: 0.8,
+            targetMaxAgentCustomerRatio: 1.5,
+            targetMaxRepeatedIssueCount: 1
+        };
+
+        function getElements() {
+            return {
+                targetAvgResponse: document.getElementById('targetAvgResponse'),
+                targetMaxResponse: document.getElementById('targetMaxResponse'),
+                targetConversationDuration: document.getElementById('targetConversationDuration'),
+                targetPolitenessCount: document.getElementById('targetPolitenessCount'),
+                targetNameAddressCount: document.getElementById('targetNameAddressCount'),
+                targetLongPauseSeconds: document.getElementById('targetLongPauseSeconds'),
+                targetLongPauseCount: document.getElementById('targetLongPauseCount'),
+                targetMinAgentCustomerRatio: document.getElementById('targetMinAgentCustomerRatio'),
+                targetMaxAgentCustomerRatio: document.getElementById('targetMaxAgentCustomerRatio'),
+                targetMaxRepeatedIssueCount: document.getElementById('targetMaxRepeatedIssueCount'),
+                successMessage: document.getElementById('successMessage')
+            };
+        }
+
+        function setFormValues(values) {
+            const el = getElements();
+            el.targetAvgResponse.value = values.targetAvgResponse;
+            el.targetMaxResponse.value = values.targetMaxResponse;
+            el.targetConversationDuration.value = values.targetConversationDuration;
+            el.targetPolitenessCount.value = values.targetPolitenessCount;
+            el.targetNameAddressCount.value = values.targetNameAddressCount;
+            el.targetLongPauseSeconds.value = values.targetLongPauseSeconds;
+            el.targetLongPauseCount.value = values.targetLongPauseCount;
+            el.targetMinAgentCustomerRatio.value = values.targetMinAgentCustomerRatio;
+            el.targetMaxAgentCustomerRatio.value = values.targetMaxAgentCustomerRatio;
+            el.targetMaxRepeatedIssueCount.value = values.targetMaxRepeatedIssueCount;
+        }
+
+        function loadSettings() {
+            const raw = localStorage.getItem(storageKey);
+            if (!raw) {
+                setFormValues(defaults);
+                return;
+            }
+
+            try {
+                const parsed = JSON.parse(raw);
+                setFormValues({
+                    targetAvgResponse: parsed.targetAvgResponse ?? defaults.targetAvgResponse,
+                    targetMaxResponse: parsed.targetMaxResponse ?? defaults.targetMaxResponse,
+                    targetConversationDuration: parsed.targetConversationDuration ?? defaults.targetConversationDuration,
+                    targetPolitenessCount: parsed.targetPolitenessCount ?? defaults.targetPolitenessCount,
+                    targetNameAddressCount: parsed.targetNameAddressCount ?? defaults.targetNameAddressCount,
+                    targetLongPauseSeconds: parsed.targetLongPauseSeconds ?? defaults.targetLongPauseSeconds,
+                    targetLongPauseCount: parsed.targetLongPauseCount ?? defaults.targetLongPauseCount,
+                    targetMinAgentCustomerRatio: parsed.targetMinAgentCustomerRatio ?? defaults.targetMinAgentCustomerRatio,
+                    targetMaxAgentCustomerRatio: parsed.targetMaxAgentCustomerRatio ?? defaults.targetMaxAgentCustomerRatio,
+                    targetMaxRepeatedIssueCount: parsed.targetMaxRepeatedIssueCount ?? defaults.targetMaxRepeatedIssueCount
+                });
+            } catch (_err) {
+                setFormValues(defaults);
+            }
+        }
+
+        function showSuccess() {
+            const el = getElements();
+            el.successMessage.style.display = 'block';
+            setTimeout(() => {
+                el.successMessage.style.display = 'none';
+            }, 2500);
+        }
+
+        function saveSettings() {
+            const el = getElements();
+            const settings = {
+                targetAvgResponse: Number(el.targetAvgResponse.value),
+                targetMaxResponse: Number(el.targetMaxResponse.value),
+                targetConversationDuration: Number(el.targetConversationDuration.value),
+                targetPolitenessCount: Number(el.targetPolitenessCount.value),
+                targetNameAddressCount: Number(el.targetNameAddressCount.value),
+                targetLongPauseSeconds: Number(el.targetLongPauseSeconds.value),
+                targetLongPauseCount: Number(el.targetLongPauseCount.value),
+                targetMinAgentCustomerRatio: Number(el.targetMinAgentCustomerRatio.value),
+                targetMaxAgentCustomerRatio: Number(el.targetMaxAgentCustomerRatio.value),
+                targetMaxRepeatedIssueCount: Number(el.targetMaxRepeatedIssueCount.value)
+            };
+
+            localStorage.setItem(storageKey, JSON.stringify(settings));
+            showSuccess();
+        }
+
+        function resetDefaults() {
+            setFormValues(defaults);
+            localStorage.setItem(storageKey, JSON.stringify(defaults));
+            showSuccess();
+        }
+
+        document.getElementById('saveBtn').addEventListener('click', saveSettings);
+        document.getElementById('resetBtn').addEventListener('click', resetDefaults);
+        document.addEventListener('DOMContentLoaded', loadSettings);
+    </script>
+</body>
+</html>

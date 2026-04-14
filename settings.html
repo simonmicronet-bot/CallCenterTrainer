@@ -1,0 +1,424 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>הגדרות שיחה</title>
+    <style>
+        :root {
+            --bg: #eef3f7;
+            --surface: #ffffff;
+            --text: #1f2937;
+            --muted: #6b7280;
+            --primary: #2563eb;
+            --primary-soft: #dbeafe;
+            --border: rgba(15, 23, 42, 0.08);
+            --shadow: 0 20px 50px rgba(15, 23, 42, 0.08);
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            min-height: 100vh;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            color: var(--text);
+            background: linear-gradient(180deg, #eef3f7 0%, #f8fafc 100%);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 24px;
+        }
+
+        .page {
+            width: min(100%, 760px);
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 28px;
+            box-shadow: var(--shadow);
+            overflow: hidden;
+        }
+
+        .header {
+            padding: 80px 32px 20px;
+            background: #ffffff;
+            border-bottom: 1px solid var(--border);
+            position: relative;
+        }
+
+        .header h1 {
+            margin: 0;
+            font-size: 1.8rem;
+            letter-spacing: 0.01em;
+        }
+
+        .header p {
+            margin: 10px 0 0;
+            color: var(--muted);
+            line-height: 1.6;
+        }
+
+        .top-logo {
+            position: absolute;
+            top: 16px;
+            left: 16px;
+            width: 96px;
+            height: 96px;
+            object-fit: contain;
+        }
+
+        .home-link {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            padding: 8px 16px;
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            background: #f8fafc;
+            color: var(--text);
+            text-decoration: none;
+            font-size: 0.9rem;
+            transition: all 0.2s ease;
+        }
+
+        .home-link:hover {
+            background: var(--primary-soft);
+            border-color: var(--primary);
+            color: var(--primary);
+        }
+
+        .navigation {
+            display: flex;
+            gap: 12px;
+            padding: 20px 32px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .nav-btn {
+            padding: 10px 16px;
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            background: #f8fafc;
+            color: var(--text);
+            text-decoration: none;
+            font-size: 0.95rem;
+            transition: all 0.2s ease;
+        }
+
+        .nav-btn:hover {
+            background: var(--primary-soft);
+            border-color: var(--primary);
+            color: var(--primary);
+        }
+
+        .nav-btn.active {
+            background: var(--primary);
+            color: #ffffff;
+            border-color: var(--primary);
+        }
+
+        .content {
+            padding: 32px;
+        }
+
+        .settings-section {
+            margin-bottom: 32px;
+        }
+
+        .settings-section h2 {
+            margin: 0 0 16px;
+            font-size: 1.3rem;
+            color: var(--text);
+        }
+
+        .setting-item {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            margin-bottom: 20px;
+            padding: 20px;
+            background: #f8fafc;
+            border-radius: 16px;
+            border: 1px solid var(--border);
+        }
+
+        .setting-label {
+            flex: 1;
+            font-weight: 600;
+            color: var(--text);
+        }
+
+        .setting-label-icon {
+            margin-left: 8px;
+        }
+
+        .setting-input {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .setting-input input {
+            width: 80px;
+            padding: 8px 12px;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            font-size: 1rem;
+            text-align: center;
+        }
+
+        .setting-input select {
+            min-width: 140px;
+            padding: 8px 12px;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            font-size: 1rem;
+            background: #ffffff;
+            color: var(--text);
+        }
+
+        .setting-item-script {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            padding: 16px 0;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .setting-item-script:last-of-type {
+            border-bottom: none;
+        }
+
+        .setting-item-script .setting-label {
+            font-size: 0.95rem;
+        }
+
+        .script-textarea {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            font-size: 0.95rem;
+            font-family: inherit;
+            color: var(--text);
+            resize: vertical;
+            min-height: 60px;
+            box-sizing: border-box;
+            direction: rtl;
+        }
+
+        .script-textarea:focus {
+            outline: none;
+            border-color: var(--primary);
+        }
+
+        .script-section-title {
+            font-size: 1rem;
+            font-weight: 700;
+            color: var(--text);
+            margin: 20px 0 8px;
+            padding-bottom: 6px;
+            border-bottom: 2px solid var(--primary);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .setting-input span {
+            color: var(--muted);
+            font-size: 0.9rem;
+        }
+
+
+
+        .update-btn {
+            width: 100%;
+            padding: 16px;
+            background: var(--primary);
+            color: #ffffff;
+            border: none;
+            border-radius: 12px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .update-btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 8px 20px rgba(37, 99, 235, 0.3);
+        }
+
+        .success-message {
+            margin-top: 16px;
+            padding: 12px 16px;
+            background: #dcfce7;
+            color: #166534;
+            border-radius: 8px;
+            text-align: center;
+            display: none;
+        }
+
+        @media (max-width: 640px) {
+            .setting-item {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 12px;
+            }
+
+            .setting-input {
+                width: 100%;
+                justify-content: flex-end;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="page">
+        <div class="header">
+            <img src="logo.png" alt="Logo" class="top-logo">
+            <a href="home.html" class="home-link">דף ראשי</a>
+            <h1>הגדרות שיחה</h1>
+            <p>שנה את הגדרות הטיימרים והפרמטרים של השיחה עם הלקוח</p>
+        </div>
+
+        <div class="content">
+            <div class="settings-section">
+                <div class="setting-item">
+                    <div class="setting-label">טיימר חוסר סבלנות של הלקוח</div>
+                    <div class="setting-input">
+                        <input type="number" id="impatienceTimer" min="5" max="120" value="30">
+                        <span>שניות</span>
+                    </div>
+                </div>
+
+                <div class="setting-item">
+                    <div class="setting-label">טיימר ניתוק שיחה לאחר חוסר תגובה</div>
+                    <div class="setting-input">
+                        <input type="number" id="disconnectTimer" min="30" max="300" value="100">
+                        <span>שניות</span>
+                    </div>
+                </div>
+
+                <div class="setting-item">
+                    <div class="setting-label"><span class="setting-label-icon">📞</span>סוג שיחה</div>
+                    <div class="setting-input">
+                        <select id="conversationDirection">
+                            <option value="incoming">📥 שיחה נכנסת</option>
+                            <option value="outgoing">📤 שיחה יוצאת</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="setting-item">
+                    <div class="setting-label"><span class="setting-label-icon">🌐</span>שפת הסימולציה (לכלל השיחות)</div>
+                    <div class="setting-input">
+                        <select id="appLanguage">
+                            <option value="he">עברית</option>
+                            <option value="en">English</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="setting-item">
+                    <div class="setting-label"><span class="setting-label-icon">🧭</span>מצב שיחה (לכלל השיחות)</div>
+                    <div class="setting-input">
+                        <select id="conversationMode">
+                            <option value="auto">אוטומטי</option>
+                            <option value="calm">רגוע</option>
+                            <option value="balanced">מאוזן</option>
+                            <option value="tense">לחוץ</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <div class="script-section-title">🧩 סקריפטים לפתיחה וסגירה</div>
+
+            <div class="setting-item-script">
+                <div class="setting-label"><span class="setting-label-icon">📥</span>משפט פתיחה — שיחה נכנסת</div>
+                <textarea id="openingScriptIncoming" class="script-textarea" placeholder="לדוגמה: שלום, מדברים עם [שם], איך אוכל לעזור?"></textarea>
+            </div>
+
+            <div class="setting-item-script">
+                <div class="setting-label"><span class="setting-label-icon">📤</span>משפט פתיחה — שיחה יוצאת</div>
+                <textarea id="openingScriptOutgoing" class="script-textarea" placeholder="לדוגמה: שלום, מדברים עם [שם] מחברת X, התקשרתי בנוגע ל..."></textarea>
+            </div>
+
+            <div class="setting-item-script">
+                <div class="setting-label"><span class="setting-label-icon">👋</span>משפט סגירה (לכל סוגי השיחות)</div>
+                <textarea id="closingScript" class="script-textarea" placeholder="לדוגמה: שמחתי לעזור, המשך יום נעים!"></textarea>
+            </div>
+
+            <button class="update-btn" onclick="updateSettings()">עדכן הגדרות</button>
+
+            <div class="success-message" id="successMessage">
+                ההגדרות עודכנו בהצלחה!
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Load saved settings on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            const impatienceTimer = localStorage.getItem('impatienceTimer') || 30;
+            const disconnectTimer = localStorage.getItem('disconnectTimer') || 100;
+            const conversationDirection = localStorage.getItem('conversationDirection') || 'incoming';
+            const appLanguage = localStorage.getItem('appLanguage') || 'he';
+            const conversationMode = localStorage.getItem('conversationMode') || 'auto';
+
+            document.getElementById('impatienceTimer').value = impatienceTimer;
+            document.getElementById('disconnectTimer').value = disconnectTimer;
+            document.getElementById('conversationDirection').value = conversationDirection;
+            document.getElementById('appLanguage').value = appLanguage;
+            document.getElementById('conversationMode').value = conversationMode;
+            document.getElementById('openingScriptIncoming').value = localStorage.getItem('openingScriptIncoming') || '';
+            document.getElementById('openingScriptOutgoing').value = localStorage.getItem('openingScriptOutgoing') || '';
+            document.getElementById('closingScript').value = localStorage.getItem('closingScript') || '';
+        });
+
+        function updateSettings() {
+            const impatienceTimer = document.getElementById('impatienceTimer').value;
+            const disconnectTimer = document.getElementById('disconnectTimer').value;
+            const conversationDirection = document.getElementById('conversationDirection').value;
+            const appLanguage = document.getElementById('appLanguage').value;
+            const conversationMode = document.getElementById('conversationMode').value;
+
+            // Validate inputs
+            if (impatienceTimer < 5 || impatienceTimer > 120) {
+                alert('טיימר חוסר סבלנות חייב להיות בין 5 ל-120 שניות');
+                return;
+            }
+
+            if (disconnectTimer < 30 || disconnectTimer > 300) {
+                alert('טיימר ניתוק חייב להיות בין 30 ל-300 שניות');
+                return;
+            }
+
+            if (parseInt(disconnectTimer) <= parseInt(impatienceTimer)) {
+                alert('טיימר ניתוק חייב להיות גדול מטיימר חוסר סבלנות');
+                return;
+            }
+
+            // Save to localStorage
+            localStorage.setItem('impatienceTimer', impatienceTimer);
+            localStorage.setItem('disconnectTimer', disconnectTimer);
+            localStorage.setItem('conversationDirection', conversationDirection);
+            localStorage.setItem('appLanguage', appLanguage);
+            localStorage.setItem('conversationMode', conversationMode);
+            localStorage.setItem('openingScriptIncoming', document.getElementById('openingScriptIncoming').value.trim());
+            localStorage.setItem('openingScriptOutgoing', document.getElementById('openingScriptOutgoing').value.trim());
+            localStorage.setItem('closingScript', document.getElementById('closingScript').value.trim());
+
+            // Show success message
+            const successMessage = document.getElementById('successMessage');
+            successMessage.style.display = 'block';
+            setTimeout(() => {
+                successMessage.style.display = 'none';
+            }, 3000);
+        }
+    </script>
+</body>
+</html>

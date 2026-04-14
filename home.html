@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ממשק סוכן AI - דף ראשי</title>
+    <style>
+        :root {
+            --bg: #eef3f7;
+            --surface: #ffffff;
+            --text: #1f2937;
+            --muted: #6b7280;
+            --primary: #2563eb;
+            --primary-soft: #dbeafe;
+            --border: rgba(15, 23, 42, 0.08);
+            --shadow: 0 20px 50px rgba(15, 23, 42, 0.08);
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            min-height: 100vh;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            color: var(--text);
+            background: linear-gradient(180deg, #eef3f7 0%, #f8fafc 100%);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 24px;
+        }
+
+        .page {
+            width: min(100%, 800px);
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 28px;
+            box-shadow: var(--shadow);
+            overflow: hidden;
+        }
+
+        .header {
+            padding: 40px 32px 32px;
+            background: #ffffff;
+            border-bottom: 1px solid var(--border);
+            text-align: center;
+            position: relative;
+        }
+
+        .header h1 {
+            margin: 0 0 16px;
+            font-size: 2.5rem;
+            letter-spacing: 0.01em;
+            color: var(--primary);
+        }
+
+        .header p {
+            margin: 0;
+            color: var(--muted);
+            line-height: 1.6;
+            font-size: 1.1rem;
+        }
+
+        .top-logo {
+            position: absolute;
+            top: 16px;
+            left: 16px;
+            width: 96px;
+            height: 96px;
+            object-fit: contain;
+        }
+
+        .content {
+            padding: 48px 32px;
+        }
+
+        .menu-grid {
+            display: grid;
+            gap: 24px;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+        }
+
+        .menu-card {
+            background: #f8fafc;
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            padding: 32px 24px;
+            text-align: center;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            color: var(--text);
+        }
+
+        .menu-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 12px 32px rgba(37, 99, 235, 0.15);
+            border-color: var(--primary);
+            background: var(--primary-soft);
+        }
+
+        .menu-card-icon {
+            font-size: 3rem;
+            margin-bottom: 16px;
+            display: block;
+        }
+
+        .menu-card h3 {
+            margin: 0 0 12px;
+            font-size: 1.4rem;
+            color: var(--text);
+        }
+
+        .menu-card p {
+            margin: 0;
+            color: var(--muted);
+            line-height: 1.5;
+        }
+
+        .footer {
+            padding: 24px 32px;
+            background: #f8fafc;
+            border-top: 1px solid var(--border);
+            text-align: center;
+            color: var(--muted);
+            font-size: 0.9rem;
+        }
+
+        @media (max-width: 640px) {
+            .menu-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .header h1 {
+                font-size: 2rem;
+            }
+
+            .content {
+                padding: 32px 24px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="page">
+        <div class="header">
+            <img src="logo.png" alt="Logo" class="top-logo">
+            <h1>ממשק סוכן AI</h1>
+            <p>כלי מתקדם לסימולציית שיחות עם לקוחות במגוון תרחישים</p>
+        </div>
+
+        <div class="content">
+            <div class="menu-grid">
+                <a href="index.html" class="menu-card">
+                    <span class="menu-card-icon">🎧</span>
+                    <h3>סימולציית שיחה</h3>
+                    <p>התחל שיחה עם לקוח וירטואלי עם תרחישים מגוונים של מכירה, שירות ותמיכה טכנית</p>
+                </a>
+
+                <a href="settings.html" class="menu-card">
+                    <span class="menu-card-icon">⚙️</span>
+                    <h3>הגדרות שיחה</h3>
+                    <p>התאם את פרמטרי השיחה כגון זמני תגובה וניתוק אוטומטי</p>
+                </a>
+
+                <a href="result-metrics-settings.html" class="menu-card">
+                    <span class="menu-card-icon">📈</span>
+                    <h3>הגדרות מדדי תוצאה</h3>
+                    <p>הגדר ערכי יעד לדוח הניתוח: זמן תגובה, זמן מקסימלי ומשך שיחה רצוי</p>
+                </a>
+            </div>
+        </div>
+
+        <div class="footer">
+            <p>© 2026 ממשק סוכן AI - כלי לפיתוח מיומנויות תקשורת</p>
+        </div>
+    </div>
+</body>
+</html>
