@@ -1258,19 +1258,7 @@ STRICT RULES:
                 const debugText = `DEBUG | target:${nextMessage.gender} | voice:${voice?.name || 'none'} | detected:${resolvedVoiceGender} | lang:${utterance.lang} | rate:${utterance.rate.toFixed(2)} | pitch:${utterance.pitch.toFixed(2)} | voices: ${voiceList}`;
                 addMessageWithoutTimerReset(debugText, 'system');
             }
-            if (nextMessage.gender === 'female' && resolvedVoiceGender !== 'female') {
-                if (!noFemaleVoiceWarningShown) {
-                    noFemaleVoiceWarningShown = true;
-                    const femaleVoiceNote = (voice && !isTargetLanguageVoice(voice))
-                        ? (currentLanguage === 'en'
-                            ? `⚠️ No female ${currentLanguage === 'en' ? 'English' : 'Hebrew'} voice found — using female voice (${voice.name}). Pronunciation may differ.`
-                            : `⚠️ אין קול עברי נשי — משמיע בקול נשי (${voice.name}). ההגייה לא תהיה בעברית. להתקנת קול עברי נשי: הגדרות Windows ← שפה וזמן אזורי ← עברית ← אפשרויות שפה ← הורד טקסט לדיבור.`)
-                        : (currentLanguage === 'en'
-                            ? `⚠️ No female voice found — audio will sound male.`
-                            : `⚠️ לא נמצא קול נשי בכלל — הקול יישמע גברי. להתקנת קול עברי נשי: הגדרות Windows ← שפה וזמן אזורי ← עברית ← אפשרויות שפה ← הורד טקסט לדיבור.`);
-                    addMessageWithoutTimerReset(femaleVoiceNote, 'system');
-                }
-            }
+
 
             activeCustomerUtterance = utterance;
             isCustomerSpeechPlaying = true;
