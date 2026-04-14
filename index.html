@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>סימולטור שיחה | HOT מובייל</title>
+    <title>סימולטור שיחה</title>
     <style>
         :root {
             --bg: #fdf2f2;
@@ -456,9 +456,9 @@
 <body>
     <div class="page">
         <div class="header">
-            <img src="logo.png" alt="HOT מובייל" class="top-logo">
+            <img src="logo.png" alt="HOT" class="top-logo">
             <a href="home.html" class="home-link">דף ראשי</a>
-            <h1>סימולטור שיחה — HOT מובייל</h1>
+            <h1>סימולטור שיחה</h1>
             <p>בחר תחום, רמת קושי ושם הנציג — ותתחיל שיחה עם לקוח HOT וירטואלי מבוסס AI.</p>
             <div class="status-row" id="statusBanner">
                 <span>
@@ -475,9 +475,9 @@
                 <div>
                     <label for="conversationType">בחר תחום מקצועי</label>
                     <select id="conversationType">
-                        <option value="sales">מכירה — HOT מובייל</option>
-                        <option value="service">שירות לקוחות — HOT מובייל</option>
-                        <option value="technical">תמיכה טכנית — HOT מובייל</option>
+                        <option value="sales">מכירה</option>
+                        <option value="service">שירות לקוחות</option>
+                        <option value="technical">תמיכה טכנית</option>
                     </select>
                 </div>
                 <div>
@@ -692,7 +692,7 @@ STRICT RULES:
 9. Do NOT write "Customer:" before your response. Just speak directly.`;
             }
 
-            return `אתה לקוח/ת HOT מובייל בסימולציית אימון לנציגי שירות לקוחות.
+            return `אתה לקוח/ת HOT בסימולציית אימון לנציגי שירות לקוחות.
 
 **הדמות שלך:**
 - שם: ${scenario.name} | מין: ${genderStr} | גיל: ${scenario.age}
@@ -702,8 +702,8 @@ STRICT RULES:
 - רמת קושי: ${diffStr}
 - תכונות אופי: ${(scenario.traits || []).join(', ')}
 
-**מה אתה יודע על HOT מובייל:**
-- HOT מובייל היא חברת הסלולר של קבוצת HOT
+**מה אתה יודע על HOT:**
+- HOT היא חברת הסלולר של קבוצת HOT
 - חבילות: HOT 60GB ב-29₪, HOT ללא הגבלה ב-49₪, HOT משפחה 4 קווים ב-129₪
 - שירותים נוספים: HOT TV, סיבים אופטיים, מימון מכשירים (Apple/Samsung/Xiaomi)
 - *1559 — מספר שירות לקוחות
@@ -2377,8 +2377,8 @@ STRICT RULES:
                     backgroundFemale: 'הטלפון שלה התקלקל והיא רוצה לבדוק אפשרויות תשלום חודשי עם HOT'
                 },
                 {
-                    mainMale: 'מעוניין לעבור ל-HOT מובייל עם שמירת מספר',
-                    mainFemale: 'מעוניינת לעבור ל-HOT מובייל עם שמירת מספר',
+                    mainMale: 'מעוניין לעבור ל-HOT עם שמירת מספר',
+                    mainFemale: 'מעוניינת לעבור ל-HOT עם שמירת מספר',
                     backgroundMale: 'כרגע בחברה מתחרה ורוצה לדעת מה HOT יכולה להציע כדי שהמעבר ישתלם',
                     backgroundFemale: 'כרגע בחברה מתחרה ורוצה לדעת מה HOT יכולה להציע כדי שהמעבר ישתלם'
                 }
@@ -2455,7 +2455,7 @@ STRICT RULES:
                 { main: 'חיוב יתר בחשבון HOT', backgroundMale: 'קיבל חשבון HOT גבוה מהצפוי על שירותים שהיו אמורים להיות חינמיים', backgroundFemale: 'קיבלה חשבון HOT גבוה מהצפוי על שירותים שהיו אמורים להיות חינמיים' },
                 { main: 'HOT TV נוסף ללא הסכמה', backgroundMale: 'שירות HOT TV נוסף לחשבון שלו בלי שביקש וחויב עליו', backgroundFemale: 'שירות HOT TV נוסף לחשבון שלה בלי שביקשה וחויבה עליו' },
                 { main: 'הצעת שימור HOT לא תאמה לחשבון', backgroundMale: 'נציג HOT הציע לו הצעת שימור בשיחה, אבל החשבון יצא שונה ממה שהובטח', backgroundFemale: 'נציג HOT הציע לה הצעת שימור בשיחה, אבל החשבון יצא שונה ממה שהובטח' },
-                { main: 'חשבון ראשון שגוי לאחר מעבר ל-HOT', backgroundMale: 'קיבל חשבון ראשון לא נכון לאחר העברת המספר ל-HOT מובייל', backgroundFemale: 'קיבלה חשבון ראשון לא נכון לאחר העברת המספר ל-HOT מובייל' },
+                { main: 'חשבון ראשון שגוי לאחר מעבר ל-HOT', backgroundMale: 'קיבל חשבון ראשון לא נכון לאחר העברת המספר ל-HOT', backgroundFemale: 'קיבלה חשבון ראשון לא נכון לאחר העברת המספר ל-HOT' },
                 { main: 'חבילת HOT נגמרה מוקדם', backgroundMale: 'החבילה החודשית שלו ב-HOT נגמרה הרבה לפני סוף חודש החיוב בלי אזהרה', backgroundFemale: 'החבילה החודשית שלה ב-HOT נגמרה הרבה לפני סוף חודש החיוב בלי אזהרה' },
                 { main: 'מחיר HOT גבוה ממה שפורסם', backgroundMale: 'מחיר חבילת HOT שמופיע באתר נמוך ממה שמופיע בחשבון שלו', backgroundFemale: 'מחיר חבילת HOT שמופיע באתר נמוך ממה שמופיע בחשבון שלה' },
                 { main: 'חברה מתחרה הציעה מחיר זול יותר', backgroundMale: 'חברה מתחרה מציעה אותה כמות גלישה ב-10₪ פחות לחודש', backgroundFemale: 'חברה מתחרה מציעה אותה כמות גלישה ב-10₪ פחות לחודש' }
@@ -2527,7 +2527,7 @@ STRICT RULES:
             }
 
             const situations = [
-                { mainMale: 'אין לי קליטה של HOT מובייל בבית', mainFemale: 'אין לי קליטה של HOT מובייל בבית', background: 'הטלפון מראה רשת HOT אבל אין עוצמה ושיחות נכשלות כל הזמן' },
+                { mainMale: 'אין לי קליטה של HOT בבית', mainFemale: 'אין לי קליטה של HOT בבית', background: 'הטלפון מראה רשת HOT אבל אין עוצמה ושיחות נכשלות כל הזמן' },
                 { mainMale: 'הנתב של HOT Fiber מראה נורה אדומה', mainFemale: 'הנתב של HOT Fiber מראה נורה אדומה', background: 'נתב הסיבים של HOT מראה אור אדום ואין אינטרנט בכלל בבית' },
                 { mainMale: 'לא קיבלתי קוד MNP מ-HOT', mainFemale: 'לא קיבלתי קוד MNP מ-HOT', background: 'ביקשתי קוד ניוד מספר מ-HOT כדי לעבור לחברה אחרת אבל הקוד לא הגיע' },
                 { mainMale: 'גלישה בחו"ל של HOT לא עובדת', mainFemale: 'גלישה בחו"ל של HOT לא עובדת', background: 'נמצא בחו"ל וגלישת הרואמינג הבינלאומי של HOT לא מתחברת בכלל' }
