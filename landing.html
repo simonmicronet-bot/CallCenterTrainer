@@ -1,0 +1,887 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Solutions - כלים ואוטומציות עם בינה מלאכותית</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary: #6366f1;
+            --primary-light: #818cf8;
+            --secondary: #ec4899;
+            --accent: #f59e0b;
+            --dark: #0f172a;
+            --light: #f8fafc;
+            --text: #1e293b;
+            --text-light: #64748b;
+            --border: #e2e8f0;
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: var(--text);
+            background: var(--light);
+            overflow-x: hidden;
+        }
+
+        /* ───── Navigation ───── */
+        nav {
+            position: fixed;
+            top: 0;
+            right: 0;
+            left: 0;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            z-index: 1000;
+            border-bottom: 1px solid var(--border);
+            padding: 1.2rem 2rem;
+        }
+
+        .nav-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            font-size: 1.5rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 2rem;
+            list-style: none;
+        }
+
+        .nav-links a {
+            text-decoration: none;
+            color: var(--text);
+            font-weight: 500;
+            transition: color 0.3s;
+        }
+
+        .nav-links a:hover {
+            color: var(--primary);
+        }
+
+        .cta-nav {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: white;
+            padding: 0.7rem 1.5rem;
+            border-radius: 50px;
+            text-decoration: none;
+            font-weight: 600;
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+
+        .cta-nav:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(99, 102, 241, 0.3);
+        }
+
+        /* ───── Hero Section ───── */
+        .hero {
+            margin-top: 80px;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 50%, #e0e7ff 100%);
+            position: relative;
+            overflow: hidden;
+            padding: 2rem;
+        }
+
+        .hero::before {
+            content: '';
+            position: absolute;
+            width: 600px;
+            height: 600px;
+            background: radial-gradient(circle, rgba(99, 102, 241, 0.15) 0%, transparent 70%);
+            border-radius: 50%;
+            top: -200px;
+            right: -100px;
+            animation: float 8s ease-in-out infinite;
+        }
+
+        .hero::after {
+            content: '';
+            position: absolute;
+            width: 500px;
+            height: 500px;
+            background: radial-gradient(circle, rgba(236, 72, 153, 0.1) 0%, transparent 70%);
+            border-radius: 50%;
+            bottom: -150px;
+            left: -100px;
+            animation: float 10s ease-in-out infinite;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(20px); }
+        }
+
+        .hero-content {
+            max-width: 800px;
+            text-align: center;
+            position: relative;
+            z-index: 1;
+        }
+
+        .hero h1 {
+            font-size: 3.5rem;
+            font-weight: 800;
+            margin-bottom: 1rem;
+            line-height: 1.2;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .hero p {
+            font-size: 1.3rem;
+            color: var(--text-light);
+            margin-bottom: 2rem;
+            line-height: 1.8;
+        }
+
+        .hero-buttons {
+            display: flex;
+            gap: 1.5rem;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            padding: 1rem 2.5rem;
+            border-radius: 50px;
+            font-size: 1rem;
+            font-weight: 600;
+            border: none;
+            cursor: pointer;
+            text-decoration: none;
+            transition: all 0.3s;
+            display: inline-block;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: white;
+            box-shadow: 0 10px 30px rgba(99, 102, 241, 0.2);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 15px 40px rgba(99, 102, 241, 0.3);
+        }
+
+        .btn-secondary {
+            background: white;
+            color: var(--primary);
+            border: 2px solid var(--primary);
+        }
+
+        .btn-secondary:hover {
+            background: var(--primary);
+            color: white;
+        }
+
+        /* ───── Capabilities Section ───── */
+        .section {
+            padding: 6rem 2rem;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .section-title {
+            font-size: 2.5rem;
+            font-weight: 700;
+            text-align: center;
+            margin-bottom: 1rem;
+            color: var(--text);
+        }
+
+        .section-subtitle {
+            text-align: center;
+            color: var(--text-light);
+            font-size: 1.1rem;
+            margin-bottom: 3rem;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .capabilities-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 2rem;
+            margin-bottom: 4rem;
+        }
+
+        .capability-card {
+            background: white;
+            padding: 2rem;
+            border-radius: 15px;
+            border: 1px solid var(--border);
+            transition: all 0.3s;
+            cursor: pointer;
+        }
+
+        .capability-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 20px 40px rgba(99, 102, 241, 0.15);
+            border-color: var(--primary);
+        }
+
+        .capability-icon {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+        }
+
+        .capability-card h3 {
+            font-size: 1.3rem;
+            margin-bottom: 0.8rem;
+            color: var(--text);
+        }
+
+        .capability-card p {
+            color: var(--text-light);
+            line-height: 1.7;
+        }
+
+        /* ───── AI Agents Examples ───── */
+        .agents-section {
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+            color: white;
+            padding: 6rem 2rem;
+        }
+
+        .agents-section .section-title {
+            color: white;
+        }
+
+        .agents-section .section-subtitle {
+            color: #cbd5e1;
+        }
+
+        .agents-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2.5rem;
+        }
+
+        .agent-card {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            padding: 2.5rem;
+            border-radius: 15px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            transition: all 0.3s;
+        }
+
+        .agent-card:hover {
+            background: rgba(255, 255, 255, 0.1);
+            border-color: var(--primary);
+            transform: translateY(-8px);
+        }
+
+        .agent-icon {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .agent-card h3 {
+            font-size: 1.4rem;
+            margin-bottom: 1rem;
+            color: white;
+        }
+
+        .agent-card p {
+            color: #cbd5e1;
+            line-height: 1.8;
+            margin-bottom: 1.5rem;
+        }
+
+        .agent-features {
+            list-style: none;
+            color: #cbd5e1;
+        }
+
+        .agent-features li {
+            padding: 0.5rem 0;
+            padding-right: 1.5rem;
+            position: relative;
+        }
+
+        .agent-features li:before {
+            content: '✓';
+            position: absolute;
+            right: 0;
+            color: var(--primary);
+            font-weight: bold;
+        }
+
+        /* ───── Industries Section ───── */
+        .industries-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .industry-card {
+            background: white;
+            padding: 2rem;
+            border-radius: 12px;
+            border: 1px solid var(--border);
+            text-align: center;
+            transition: all 0.3s;
+        }
+
+        .industry-card:hover {
+            border-color: var(--primary);
+            background: linear-gradient(135deg, rgba(99, 102, 241, 0.05) 0%, rgba(236, 72, 153, 0.05) 100%);
+        }
+
+        .industry-icon {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+        }
+
+        .industry-card h3 {
+            font-size: 1.2rem;
+            margin-bottom: 0.8rem;
+            color: var(--text);
+        }
+
+        .industry-card p {
+            color: var(--text-light);
+            font-size: 0.95rem;
+            line-height: 1.6;
+        }
+
+        /* ───── Benefits Section ───── */
+        .benefits-section {
+            background: linear-gradient(135deg, #f8fafc 0%, #ede9fe 100%);
+            padding: 6rem 2rem;
+        }
+
+        .benefits-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 2rem;
+        }
+
+        .benefit-item {
+            display: flex;
+            gap: 1.5rem;
+            padding: 1.5rem;
+            background: white;
+            border-radius: 12px;
+            border-left: 4px solid var(--primary);
+        }
+
+        .benefit-icon {
+            font-size: 2rem;
+            min-width: 50px;
+        }
+
+        .benefit-item h3 {
+            font-size: 1.1rem;
+            margin-bottom: 0.5rem;
+            color: var(--text);
+        }
+
+        .benefit-item p {
+            color: var(--text-light);
+            font-size: 0.95rem;
+        }
+
+        /* ───── CTA Section ───── */
+        .cta-section {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+            color: white;
+            padding: 5rem 2rem;
+            text-align: center;
+            border-radius: 20px;
+            margin: 4rem 2rem;
+            box-shadow: 0 20px 50px rgba(99, 102, 241, 0.3);
+        }
+
+        .cta-section h2 {
+            font-size: 2.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .cta-section p {
+            font-size: 1.2rem;
+            margin-bottom: 2.5rem;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .cta-form {
+            display: flex;
+            gap: 1rem;
+            max-width: 500px;
+            margin: 0 auto;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .cta-form input {
+            flex: 1;
+            min-width: 250px;
+            padding: 1rem;
+            border: none;
+            border-radius: 50px;
+            font-size: 1rem;
+        }
+
+        .cta-form button {
+            padding: 1rem 2.5rem;
+            background: white;
+            color: var(--primary);
+            border: none;
+            border-radius: 50px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .cta-form button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+        }
+
+        /* ───── Footer ───── */
+        footer {
+            background: var(--dark);
+            color: #cbd5e1;
+            padding: 4rem 2rem;
+            text-align: center;
+        }
+
+        .footer-content {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .footer-links {
+            display: flex;
+            gap: 2rem;
+            justify-content: center;
+            margin-bottom: 2rem;
+            flex-wrap: wrap;
+        }
+
+        .footer-links a {
+            color: #cbd5e1;
+            text-decoration: none;
+            transition: color 0.3s;
+        }
+
+        .footer-links a:hover {
+            color: var(--primary);
+        }
+
+        .footer-divider {
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            margin: 2rem 0;
+        }
+
+        .footer-bottom {
+            font-size: 0.9rem;
+            color: #94a3b8;
+        }
+
+        /* ───── Responsive ───── */
+        @media (max-width: 768px) {
+            .hero h1 {
+                font-size: 2.5rem;
+            }
+
+            .hero p {
+                font-size: 1.1rem;
+            }
+
+            .nav-links {
+                gap: 1rem;
+                font-size: 0.95rem;
+            }
+
+            .hero-buttons {
+                flex-direction: column;
+                gap: 1rem;
+            }
+
+            .btn {
+                width: 100%;
+            }
+
+            .section-title {
+                font-size: 2rem;
+            }
+
+            .cta-section h2 {
+                font-size: 1.8rem;
+            }
+
+            .cta-form {
+                flex-direction: column;
+            }
+
+            .cta-form input,
+            .cta-form button {
+                width: 100%;
+            }
+        }
+
+        /* ───── Animations ───── */
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .fade-in {
+            animation: fadeInUp 0.8s ease-out forwards;
+        }
+
+        .delay-1 { animation-delay: 0.1s; }
+        .delay-2 { animation-delay: 0.2s; }
+        .delay-3 { animation-delay: 0.3s; }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav>
+        <div class="nav-container">
+            <div class="logo">🤖 AI Solutions</div>
+            <ul class="nav-links">
+                <li><a href="#capabilities">היכולות</a></li>
+                <li><a href="#agents">סוכנים</a></li>
+                <li><a href="#industries">תחומים</a></li>
+                <li><a href="#contact" class="cta-nav">צור קשר</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section class="hero">
+        <div class="hero-content">
+            <h1>בינה מלאכותית שמתרגמת לתוצאות בפועל</h1>
+            <p>כלים חכמים ואוטומציות מתקדמות לתהליכים עסקיים — מעטפת פתרונות AI שמעניקה ערך ממשי לעסקך</p>
+            <div class="hero-buttons">
+                <button class="btn btn-primary" onclick="scrollToSection('contact')">התחל עכשיו</button>
+                <button class="btn btn-secondary" onclick="alert('למידע נוסף, צור קשר עם הצוה שלנו');">למד עוד</button>
+            </div>
+        </div>
+    </section>
+
+    <!-- Capabilities Section -->
+    <section id="capabilities" class="section">
+        <h2 class="section-title">היכולות שלנו</h2>
+        <p class="section-subtitle">פתרונות AI מקיפים המעוצבים עבור כל אתגר עסקי</p>
+        <div class="capabilities-grid">
+            <div class="capability-card fade-in delay-1">
+                <div class="capability-icon">⚡</div>
+                <h3>אוטומציה חכמה</h3>
+                <p>אוטומציה של תהליכים מורכבים בעזרת סוכני AI, חוסכת זמן ומחסלת טעויות אנוש.</p>
+            </div>
+            <div class="capability-card fade-in delay-2">
+                <div class="capability-icon">📊</div>
+                <h3>ניתוח נתונים</h3>
+                <p>הבנה עמוקה של הנתונים שלך — מדידה, דוח והחלטות בעיתוי המדויק.</p>
+            </div>
+            <div class="capability-card fade-in delay-3">
+                <div class="capability-icon">🔄</div>
+                <h3>אינטגרציה חלקה</h3>
+                <p>חיבור נקי עם מערכות קיימות — API ממומלל, סנכרון מידע בזמן אמת.</p>
+            </div>
+            <div class="capability-card fade-in delay-1">
+                <div class="capability-icon">🎯</div>
+                <h3>אוטומציה ממוקדת</h3>
+                <p>פתרונות כללים או ממוקדים לתחום — בדיוק מה שאתה צריך, לא יותר.</p>
+            </div>
+            <div class="capability-card fade-in delay-2">
+                <div class="capability-icon">🔐</div>
+                <h3>אבטחה ופרטיות</h3>
+                <p>מדדים גבוהים של אבטחה מידע, ציות רגולטורי וגיבוי מתמשך.</p>
+            </div>
+            <div class="capability-card fade-in delay-3">
+                <div class="capability-icon">📈</div>
+                <h3>שיפור ביצועים</h3>
+                <p>גידול במהירות עבודה, הפחתה בעלויות וטיפול מהיר בעומס עבודה.</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- AI Agents Examples -->
+    <section id="agents" class="agents-section">
+        <div class="section">
+            <h2 class="section-title">דוגמאות לסוכני AI</h2>
+            <p class="section-subtitle">פתרונות חכמים בתחומים עסקיים שונים</p>
+            <div class="agents-grid">
+                <div class="agent-card fade-in delay-1">
+                    <div class="agent-icon">📞</div>
+                    <h3>סוכן שירות לקוחות</h3>
+                    <p>תמיכה 24/7 בשפה של הלקוח, פתרון בעיות בתוך שניות, הנמקה אדם בעבודה.</p>
+                    <ul class="agent-features">
+                        <li>תשובה מיידית לשאלות נפוצות</li>
+                        <li>טיפול בתלונות עם אנושיות</li>
+                        <li>ניתוב אוטומטי למומחה</li>
+                    </ul>
+                </div>
+                <div class="agent-card fade-in delay-2">
+                    <div class="agent-icon">💰</div>
+                    <h3>סוכן הנהלת חשבונות</h3>
+                    <p>ניהול חשבונות, רשומות כספיות, דוחות אוטומטיים וצפיית מצב כספי תמיד עדכני.</p>
+                    <ul class="agent-features">
+                        <li>חישוב אוטומטי של חובות</li>
+                        <li>דוחות יומיים/שבועיים</li>
+                        <li>ניבוי תזרים מזומנים</li>
+                    </ul>
+                </div>
+                <div class="agent-card fade-in delay-3">
+                    <div class="agent-icon">📋</div>
+                    <h3>סוכן ניהול משימות</h3>
+                    <p>קביעת עדיפויות, ניהול מועדים, תזכורות עוקבות וספיקה בתכנון פרויקטים.</p>
+                    <ul class="agent-features">
+                        <li>תזמון חכם של משימות</li>
+                        <li>זיהוי אי-סדרים וסכנות</li>
+                        <li>דוחות התקדמות אוטומטיים</li>
+                    </ul>
+                </div>
+                <div class="agent-card fade-in delay-1">
+                    <div class="agent-icon">🏭</div>
+                    <h3>סוכן בקרה ייצור</h3>
+                    <p>מעקב אחרי קוי ייצור, זיהוי בעיות, אופטימיזציה של תפוקה.</p>
+                    <ul class="agent-features">
+                        <li>מעקב איכות בזמן אמת</li>
+                        <li>חיזוי תקלות</li>
+                        <li>אופטימיזציה של משאבים</li>
+                    </ul>
+                </div>
+                <div class="agent-card fade-in delay-2">
+                    <div class="agent-icon">📧</div>
+                    <h3>סוכן ניהול דיוור</h3>
+                    <p>מיון אימיילים, תשובות אוטומטיות, סיווג דחופות וביצוע פעולות.</p>
+                    <ul class="agent-features">
+                        <li>ניתוח תוכן הודעות</li>
+                        <li>תשובה עצמאית לדברים שגרתיים</li>
+                        <li>סינוף פישינג וזיבול</li>
+                    </ul>
+                </div>
+                <div class="agent-card fade-in delay-3">
+                    <div class="agent-icon">📱</div>
+                    <h3>סוכן שיווק דיגיטלי</h3>
+                    <p>ניהול קמפיינים, ניתוח דעות חרדיות, יצור תוכן והמלצות היעד.</p>
+                    <ul class="agent-features">
+                        <li>ניתוח אנשיות יעד</li>
+                        <li>עריכת קמפיינים דינמיים</li>
+                        <li>חיזוי ROI ותוצאות קמפיינים</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Industries Section -->
+    <section id="industries" class="section">
+        <h2 class="section-title">תחומים שאנחנו משרתים</h2>
+        <p class="section-subtitle">פתרונות מותאמים לכל תעשייה</p>
+        <div class="industries-grid">
+            <div class="industry-card fade-in delay-1">
+                <div class="industry-icon">🏥</div>
+                <h3>בריאות</h3>
+                <p>ניהול חולים, דיוור רפואי אוטומטי, תמיכה בעלויות וטיפול מחלות.</p>
+            </div>
+            <div class="industry-card fade-in delay-2">
+                <div class="industry-icon">🏦</div>
+                <h3>בנקאות ופיננסים</h3>
+                <p>זיהוי הונאות, ניהול סיכונים, ניתוח אשראי וניהול פורטפוליו.</p>
+            </div>
+            <div class="industry-card fade-in delay-3">
+                <div class="industry-icon">🏪</div>
+                <h3>קמעוני ומסחר אלקטרוני</h3>
+                <p>המלצות מוצרים אישיות, ניהול מלאי, התאמת מחירים.</p>
+            </div>
+            <div class="industry-card fade-in delay-1">
+                <div class="industry-icon">🚚</div>
+                <h3>לוגיסטיקה ותחבורה</h3>
+                <p>ניתוב אפטימלי, חיזוי עיכובים, ניהול הובלות בזמן אמת.</p>
+            </div>
+            <div class="industry-card fade-in delay-2">
+                <div class="industry-icon">🏭</div>
+                <h3>ייצור</h3>
+                <p>בקרת איכות אוטומטית, תחזוקה מונעת, אופטימיזציה ייצור.</p>
+            </div>
+            <div class="industry-card fade-in delay-3">
+                <div class="industry-icon">🎓</div>
+                <h3>חינוך</h3>
+                <p>התאמת לימוד אישי, בדיקה אוטומטית, ניתוח התקדמות תלמידים.</p>
+            </div>
+            <div class="industry-card fade-in delay-1">
+                <div class="industry-icon">💼</div>
+                <h3>משרדים ומנהל עסקים</h3>
+                <p>ניהול מסמכים, תזמון פגישות, דוחות שוטפים וניתוחי נתונים.</p>
+            </div>
+            <div class="industry-card fade-in delay-2">
+                <div class="industry-icon">🏡</div>
+                <h3>נדלן</h3>
+                <p>הערכת נכסים, שיווק נכסים, ניהול חוזים בעלים ושוכרים.</p>
+            </div>
+            <div class="industry-card fade-in delay-3">
+                <div class="industry-icon">📺</div>
+                <h3>תקשורת ומדיה</h3>
+                <p>ניהול תוכן, מיון חדשות, אנליטיקה קהל וחיזוי וירליות.</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Benefits Section -->
+    <section class="benefits-section">
+        <div class="section">
+            <h2 class="section-title">למה לבחור בנו?</h2>
+            <p class="section-subtitle">יתרונות שיהפכו את העסק שלך</p>
+            <div class="benefits-list">
+                <div class="benefit-item fade-in delay-1">
+                    <div class="benefit-icon">⚙️</div>
+                    <div>
+                        <h3>אוטומציה מלאה</h3>
+                        <p>חסכו עד 70% בעלויות תפעול בתהליכים חוזרים.</p>
+                    </div>
+                </div>
+                <div class="benefit-item fade-in delay-2">
+                    <div class="benefit-icon">🚀</div>
+                    <div>
+                        <h3>מהירות פי 10</h3>
+                        <p>עיבוד משימות בשניות במקום שעות — תחרותיות מיידית.</p>
+                    </div>
+                </div>
+                <div class="benefit-item fade-in delay-3">
+                    <div class="benefit-icon">🎯</div>
+                    <div>
+                        <h3>דיוק עד 99%</h3>
+                        <p>פחות שגיאות, יותר שקט נפשי — AI לא מכחיל.</p>
+                    </div>
+                </div>
+                <div class="benefit-item fade-in delay-1">
+                    <div class="benefit-icon">📞</div>
+                    <div>
+                        <h3>תמיכה 24/7</h3>
+                        <p>צוה שלנו תמיד זמין לעזרה, הדרכה וטיפול בבעיות.</p>
+                    </div>
+                </div>
+                <div class="benefit-item fade-in delay-2">
+                    <div class="benefit-icon">💡</div>
+                    <div>
+                        <h3>חדשנות מתמשכת</h3>
+                        <p>עדכונים תמידיים וחדשות יכולות — תמיד בצמוד לעתידות.</p>
+                    </div>
+                </div>
+                <div class="benefit-item fade-in delay-3">
+                    <div class="benefit-icon">🤝</div>
+                    <div>
+                        <h3>שותפות אמתית</h3>
+                        <p>אנחנו לא רק ספקים — אנחנו שותפים בהצלחתך.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- CTA Section -->
+    <section id="contact" class="section">
+        <div class="cta-section">
+            <h2>מוכנים לשנות את העסק שלכם?</h2>
+            <p>צור קשר עם הצוה שלנו היום — היעוץ הראשון שלנו בחינם!</p>
+            <form class="cta-form" onsubmit="handleSubmit(event)">
+                <input type="email" placeholder="כתובת הדוא״ל שלך" required>
+                <button type="submit">צור קשר</button>
+            </form>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer>
+        <div class="footer-content">
+            <h3>🤖 AI Solutions</h3>
+            <p>פתרונות בינה מלאכותית מתקדמים לעסקים</p>
+            <div class="footer-links">
+                <a href="#capabilities">היכולות</a>
+                <a href="#agents">סוכנים</a>
+                <a href="#industries">תחומים</a>
+                <a href="#">מדיניות פרטיות</a>
+                <a href="#">תנאי שירות</a>
+            </div>
+            <div class="footer-divider"></div>
+            <div class="footer-bottom">
+                <p>&copy; 2026 AI Solutions. כל הזכויות שמורות.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // Smooth scroll to section
+        function scrollToSection(sectionId) {
+            const section = document.getElementById(sectionId);
+            if (section) {
+                section.scrollIntoView({ behavior: 'smooth' });
+            }
+        }
+
+        // Handle form submission
+        function handleSubmit(event) {
+            event.preventDefault();
+            const email = event.target[0].value;
+            alert(`תודה! נשלחנו אליך הודעה במייל: ${email}\n\nניצור קשר בחזרה בתוך 24 שעות.`);
+            event.target.reset();
+        }
+
+        // Add fade-in animation on scroll
+        const observerOptions = {
+            threshold: 0.1,
+            rootMargin: '0px 0px -100px 0px'
+        };
+
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('fade-in');
+                    observer.unobserve(entry.target);
+                }
+            });
+        }, observerOptions);
+
+        document.querySelectorAll('.capability-card, .agent-card, .industry-card, .benefit-item').forEach(el => {
+            observer.observe(el);
+        });
+    </script>
+</body>
+</html>
