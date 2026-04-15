@@ -1,0 +1,517 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ניתוח ביצועי שיחה מקוצר</title>
+    <style>
+        :root {
+            --bg: #fdf2f2;
+            --surface: #ffffff;
+            --text: #1f2937;
+            --muted: #6b7280;
+            --primary: #e8001c;
+            --primary-soft: #fde8ea;
+            --border: rgba(15, 23, 42, 0.08);
+            --shadow: 0 20px 50px rgba(15, 23, 42, 0.08);
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            min-height: 100vh;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            color: var(--text);
+            background: linear-gradient(180deg, #fdf2f2 0%, #f8fafc 100%);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 24px;
+        }
+
+        .page {
+            width: min(100%, 760px);
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 28px;
+            box-shadow: var(--shadow);
+            overflow: hidden;
+        }
+
+        .header {
+            padding: 80px 32px 20px;
+            background: #ffffff;
+            border-bottom: 1px solid var(--border);
+            position: relative;
+        }
+
+        .header h1 {
+            margin: 0;
+            font-size: 1.8rem;
+            letter-spacing: 0.01em;
+        }
+
+        .header p {
+            margin: 10px 0 0;
+            color: var(--muted);
+            line-height: 1.6;
+        }
+
+        .top-logo {
+            position: absolute;
+            top: 16px;
+            left: 16px;
+            width: 96px;
+            height: 96px;
+            object-fit: contain;
+        }
+
+        .home-link {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            padding: 8px 16px;
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            background: #f8fafc;
+            color: var(--text);
+            text-decoration: none;
+            font-size: 0.9rem;
+            transition: all 0.2s ease;
+        }
+
+        .home-link:hover {
+            background: var(--primary-soft);
+            border-color: var(--primary);
+            color: var(--primary);
+        }
+
+        .content {
+            padding: 24px 32px 32px;
+        }
+
+        .empty-state {
+            border: 1px dashed rgba(15, 23, 42, 0.18);
+            border-radius: 18px;
+            padding: 28px 20px;
+            color: var(--muted);
+            background: #f8fafc;
+            text-align: center;
+            line-height: 1.7;
+        }
+
+        .compact-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            overflow: hidden;
+            background: #fff;
+        }
+
+        .compact-table thead th {
+            background: #f8fafc;
+            color: var(--muted);
+            font-size: 0.85rem;
+            font-weight: 700;
+            padding: 12px 14px;
+            border-bottom: 1px solid var(--border);
+            text-align: right;
+        }
+
+        .compact-table tbody td {
+            padding: 12px 14px;
+            border-bottom: 1px solid rgba(15, 23, 42, 0.06);
+            vertical-align: middle;
+            font-size: 0.94rem;
+        }
+
+        .compact-table tbody tr:last-child td {
+            border-bottom: none;
+        }
+
+        .metric-name {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            font-weight: 700;
+        }
+
+        .metric-icon {
+            width: 28px;
+            height: 28px;
+            border-radius: 10px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            background: #f1f5f9;
+            font-size: 1rem;
+        }
+
+        .weight-cell {
+            font-weight: 700;
+            color: #9a000f;
+            white-space: nowrap;
+        }
+
+        .score-chip {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 72px;
+            padding: 6px 10px;
+            border-radius: 999px;
+            font-weight: 700;
+            font-size: 0.86rem;
+            border: 1px solid transparent;
+        }
+
+        .score-good {
+            background: #dcfce7;
+            color: #166534;
+            border-color: #86efac;
+        }
+
+        .score-mid {
+            background: #fef3c7;
+            color: #92400e;
+            border-color: #fcd34d;
+        }
+
+        .score-low {
+            background: #fee2e2;
+            color: #991b1b;
+            border-color: #fca5a5;
+        }
+
+        .score-na {
+            background: #eef2ff;
+            color: #4338ca;
+            border-color: #c7d2fe;
+        }
+
+        .summary-row {
+            margin-top: 14px;
+            border: 1px solid rgba(232, 0, 28, 0.22);
+            background: linear-gradient(135deg, #fff5f6 0%, #fde8ea 100%);
+            border-radius: 16px;
+            padding: 14px 16px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        .summary-label {
+            font-weight: 700;
+            color: #9a000f;
+        }
+
+        .summary-score {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            font-weight: 800;
+            color: var(--primary);
+            font-size: 1.1rem;
+        }
+
+        .summary-badge {
+            border-radius: 999px;
+            padding: 5px 10px;
+            font-size: 0.82rem;
+            font-weight: 700;
+            border: 1px solid transparent;
+        }
+
+        .badge-good {
+            background: #dcfce7;
+            color: #166534;
+            border-color: #86efac;
+        }
+
+        .badge-mid {
+            background: #fef3c7;
+            color: #92400e;
+            border-color: #fcd34d;
+        }
+
+        .badge-low {
+            background: #fee2e2;
+            color: #991b1b;
+            border-color: #fca5a5;
+        }
+
+        @media (max-width: 700px) {
+            .content {
+                padding: 20px;
+            }
+
+            .compact-table thead th,
+            .compact-table tbody td {
+                padding: 10px 8px;
+                font-size: 0.88rem;
+            }
+
+            .metric-icon {
+                width: 24px;
+                height: 24px;
+                border-radius: 8px;
+                font-size: 0.9rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="page">
+        <div class="header">
+            <img src="logo.png" alt="לוגו" class="top-logo">
+            <a href="home.html" class="home-link">דף ראשי</a>
+            <h1>ניתוח ביצועי שיחה מקוצר</h1>
+            <p>תצוגת מדדים תמציתית: מדד, אחוז השפעה וציון לכל מדד</p>
+        </div>
+
+        <div class="content" id="content"></div>
+    </div>
+
+    <script>
+        const analysisKey = 'lastConversationAnalysis';
+        const metricSettingsKey = 'resultMetricSettings';
+        const weightSettingsKey = 'metricWeightSettings';
+
+        const metricDefaults = {
+            targetAvgResponse: 5.0,
+            targetMaxResponse: 12.0,
+            targetConversationDuration: 240,
+            targetPolitenessCount: 3,
+            targetNameAddressCount: 1,
+            targetLongPauseCount: 0,
+            targetMinAgentCustomerRatio: 0.8,
+            targetMaxAgentCustomerRatio: 1.5,
+            targetMaxRepeatedIssueCount: 1
+        };
+
+        const weightDefaults = {
+            duration: 7,
+            disconnectedBy: 8,
+            averageResponse: 12,
+            maxResponse: 10,
+            politeness: 6,
+            nameAddress: 4,
+            longPause: 4,
+            ratio: 4,
+            script: 15,
+            repeatedIssue: 10,
+            additionalHelp: 8,
+            customerIdentification: 12
+        };
+
+        const metricMeta = {
+            duration: { icon: '⏳', label: 'משך שיחה' },
+            disconnectedBy: { icon: '☎️', label: 'ניתוק על ידי לקוח' },
+            averageResponse: { icon: '⚡', label: 'זמן תגובה ממוצע' },
+            maxResponse: { icon: '⏱️', label: 'זמן תגובה מקסימלי' },
+            politeness: { icon: '😊', label: 'נימוס ושירותיות' },
+            nameAddress: { icon: '🧑', label: 'פניה בשם הלקוח' },
+            longPause: { icon: '🔇', label: 'השהיות ארוכות' },
+            ratio: { icon: '⚖️', label: 'יחס הודעות סוכן/לקוח' },
+            script: { icon: '📜', label: 'עמידה בסקריפט' },
+            repeatedIssue: { icon: '🔁', label: 'נושאים חוזרים' },
+            additionalHelp: { icon: '🤝', label: 'הצעת עזרה נוספת' },
+            customerIdentification: { icon: '🪪', label: 'זיהוי לקוח' }
+        };
+
+        function loadMetricSettings() {
+            const raw = localStorage.getItem(metricSettingsKey);
+            if (!raw) return metricDefaults;
+            try {
+                const parsed = JSON.parse(raw);
+                return {
+                    targetAvgResponse: Number(parsed.targetAvgResponse ?? metricDefaults.targetAvgResponse),
+                    targetMaxResponse: Number(parsed.targetMaxResponse ?? metricDefaults.targetMaxResponse),
+                    targetConversationDuration: Number(parsed.targetConversationDuration ?? metricDefaults.targetConversationDuration),
+                    targetPolitenessCount: Number(parsed.targetPolitenessCount ?? metricDefaults.targetPolitenessCount),
+                    targetNameAddressCount: Number(parsed.targetNameAddressCount ?? metricDefaults.targetNameAddressCount),
+                    targetLongPauseCount: Number(parsed.targetLongPauseCount ?? metricDefaults.targetLongPauseCount),
+                    targetMinAgentCustomerRatio: Number(parsed.targetMinAgentCustomerRatio ?? metricDefaults.targetMinAgentCustomerRatio),
+                    targetMaxAgentCustomerRatio: Number(parsed.targetMaxAgentCustomerRatio ?? metricDefaults.targetMaxAgentCustomerRatio),
+                    targetMaxRepeatedIssueCount: Number(parsed.targetMaxRepeatedIssueCount ?? metricDefaults.targetMaxRepeatedIssueCount)
+                };
+            } catch (_err) {
+                return metricDefaults;
+            }
+        }
+
+        function loadWeightSettings() {
+            try {
+                const raw = localStorage.getItem(weightSettingsKey);
+                if (!raw) return Object.assign({}, weightDefaults);
+                const parsed = JSON.parse(raw);
+                const result = {};
+                Object.keys(weightDefaults).forEach((key) => {
+                    result[key] = Number(parsed[key] ?? weightDefaults[key]);
+                });
+                return result;
+            } catch (_e) {
+                return Object.assign({}, weightDefaults);
+            }
+        }
+
+        function clamp01(value) {
+            return Math.max(0, Math.min(1, value));
+        }
+
+        function scoreLowerIsBetter(value, target) {
+            if (target <= 0) return value <= 0 ? 1 : 0;
+            if (value <= target) return 1;
+            return clamp01(target / value);
+        }
+
+        function scoreHigherIsBetter(value, target) {
+            if (target <= 0) return 1;
+            return clamp01(value / target);
+        }
+
+        function scoreRange(value, minTarget, maxTarget) {
+            if (minTarget > maxTarget) return 0;
+            if (value >= minTarget && value <= maxTarget) return 1;
+            if (value < minTarget) return minTarget > 0 ? clamp01(value / minTarget) : 0;
+            return value > 0 ? clamp01(maxTarget / value) : 0;
+        }
+
+        function getLevel(score100) {
+            if (score100 >= 85) return { text: 'מצוין', cls: 'badge-good' };
+            if (score100 >= 70) return { text: 'טוב', cls: 'badge-good' };
+            if (score100 >= 55) return { text: 'בינוני', cls: 'badge-mid' };
+            return { text: 'נדרש שיפור', cls: 'badge-low' };
+        }
+
+        function getScoreChipClass(score, available) {
+            if (!available) return 'score-na';
+            if (score >= 85) return 'score-good';
+            if (score >= 60) return 'score-mid';
+            return 'score-low';
+        }
+
+        function buildCompactScore(data, settings, weights) {
+            const durationSeconds = Number(data.durationSeconds ?? 0);
+            const avgSeconds = Number(data.averageResponseSeconds ?? 0);
+            const maxSeconds = Number(data.maxResponseSeconds ?? 0);
+            const hasAverageResponseMetric = Boolean(data.hasAverageResponseMetric);
+            const hasMaxResponseMetric = Boolean(data.hasMaxResponseMetric);
+            const politenessCount = Number(data.politenessCount ?? 0);
+            const nameAddressCount = Number(data.nameAddressCount ?? 0);
+            const longPauseCount = Number(data.longPauseCount ?? 0);
+            const hasMessageRatioMetric = Boolean(data.hasMessageRatioMetric);
+            const agentCustomerRatio = Number(data.agentCustomerRatio ?? 0);
+            const openingScriptConfigured = Boolean(data.openingScriptConfigured) || String(data.configuredOpeningScript || '').length > 0;
+            const closingScriptConfigured = Boolean(data.closingScriptConfigured) || String(data.configuredClosingScript || '').length > 0;
+            const openingScriptUsed = data.openingScriptUsed === true;
+            const closingScriptUsed = data.closingScriptUsed === true;
+            const repeatedIssueCount = Number(data.repeatedIssueCount ?? 0);
+            const offeredAdditionalHelp = Boolean(data.offeredAdditionalHelp);
+            const customerIdentificationRequested = Boolean(data.customerIdentificationRequested);
+            const disconnectedBy = data.disconnectedBy || '-';
+
+            const components = [];
+
+            components.push({ key: 'duration', weight: weights.duration, score: scoreLowerIsBetter(durationSeconds, settings.targetConversationDuration), available: true });
+            components.push({ key: 'disconnectedBy', weight: weights.disconnectedBy, score: disconnectedBy === 'הלקוח' ? 0 : 1, available: true });
+            components.push({ key: 'averageResponse', weight: weights.averageResponse, score: scoreLowerIsBetter(avgSeconds, settings.targetAvgResponse), available: hasAverageResponseMetric });
+            components.push({ key: 'maxResponse', weight: weights.maxResponse, score: scoreLowerIsBetter(maxSeconds, settings.targetMaxResponse), available: hasMaxResponseMetric });
+            components.push({ key: 'politeness', weight: weights.politeness, score: scoreHigherIsBetter(politenessCount, settings.targetPolitenessCount), available: true });
+            components.push({ key: 'nameAddress', weight: weights.nameAddress, score: scoreHigherIsBetter(nameAddressCount, settings.targetNameAddressCount), available: true });
+            components.push({ key: 'longPause', weight: weights.longPause, score: scoreLowerIsBetter(longPauseCount, settings.targetLongPauseCount), available: true });
+            components.push({ key: 'ratio', weight: weights.ratio, score: scoreRange(agentCustomerRatio, settings.targetMinAgentCustomerRatio, settings.targetMaxAgentCustomerRatio), available: hasMessageRatioMetric });
+            components.push({
+                key: 'script',
+                weight: weights.script,
+                score: (() => {
+                    if (!openingScriptConfigured && !closingScriptConfigured) return 0.5;
+                    const parts = [];
+                    if (openingScriptConfigured) parts.push(openingScriptUsed ? 1 : 0);
+                    if (closingScriptConfigured) parts.push(closingScriptUsed ? 1 : 0);
+                    return parts.reduce((a, b) => a + b, 0) / parts.length;
+                })(),
+                available: openingScriptConfigured || closingScriptConfigured || false
+            });
+            components.push({ key: 'repeatedIssue', weight: weights.repeatedIssue, score: scoreLowerIsBetter(repeatedIssueCount, settings.targetMaxRepeatedIssueCount), available: true });
+            components.push({ key: 'additionalHelp', weight: weights.additionalHelp, score: offeredAdditionalHelp ? 1 : 0, available: true });
+            components.push({ key: 'customerIdentification', weight: weights.customerIdentification, score: customerIdentificationRequested ? 1 : 0, available: true });
+
+            const availableComponents = components.filter((component) => component.available);
+            const usedWeight = availableComponents.reduce((sum, component) => sum + component.weight, 0);
+            const weightedSum = availableComponents.reduce((sum, component) => sum + (component.score * component.weight), 0);
+            const normalizedScore = usedWeight > 0 ? (weightedSum / usedWeight) : 0;
+            const finalScore = Math.round(normalizedScore * 100);
+
+            return {
+                components,
+                finalScore,
+                usedWeight
+            };
+        }
+
+        function renderCompactAnalysis() {
+            const content = document.getElementById('content');
+            const raw = localStorage.getItem(analysisKey);
+
+            if (!raw) {
+                content.innerHTML = '<div class="empty-state">אין עדיין נתוני שיחה לניתוח. התחל שיחה בדף הסימולציה כדי לראות תוצאות.</div>';
+                return;
+            }
+
+            const data = JSON.parse(raw);
+            const settings = loadMetricSettings();
+            const weights = loadWeightSettings();
+            const result = buildCompactScore(data, settings, weights);
+            const level = getLevel(result.finalScore);
+
+            const rows = result.components.map((component) => {
+                const meta = metricMeta[component.key] || { icon: '•', label: component.key };
+                const metricScore = component.available ? Math.round(component.score * 100) : null;
+                const scoreText = component.available ? metricScore + '%' : 'לא זמין';
+                const scoreClass = getScoreChipClass(metricScore ?? 0, component.available);
+
+                return `
+                    <tr>
+                        <td>
+                            <span class="metric-name">
+                                <span class="metric-icon">${meta.icon}</span>
+                                ${meta.label}
+                            </span>
+                        </td>
+                        <td class="weight-cell">${component.weight}%</td>
+                        <td><span class="score-chip ${scoreClass}">${scoreText}</span></td>
+                    </tr>
+                `;
+            }).join('');
+
+            content.innerHTML = `
+                <table class="compact-table">
+                    <thead>
+                        <tr>
+                            <th>מדד</th>
+                            <th>אחוז השפעה</th>
+                            <th>ציון מדד</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${rows}
+                    </tbody>
+                </table>
+                <div class="summary-row">
+                    <span class="summary-label">ציון סופי</span>
+                    <span class="summary-score">${result.finalScore}% <span class="summary-badge ${level.cls}">${level.text}</span></span>
+                </div>
+            `;
+        }
+
+        renderCompactAnalysis();
+    </script>
+</body>
+</html>

@@ -60,6 +60,28 @@
             line-height: 1.6;
         }
 
+        .header-short-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            margin-top: 12px;
+            padding: 8px 14px;
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            background: #f8fafc;
+            color: var(--text);
+            text-decoration: none;
+            font-size: 0.9rem;
+            font-weight: 600;
+            transition: all 0.2s ease;
+        }
+
+        .header-short-link:hover {
+            background: var(--primary-soft);
+            border-color: var(--primary);
+            color: var(--primary);
+        }
+
         .top-logo {
             position: absolute;
             top: 16px;
@@ -379,6 +401,7 @@
             <a href="home.html" class="home-link">דף ראשי</a>
             <h1>ניתוח ביצועי שיחה</h1>
             <p>סיכום מדדי השיחה האחרונה מערכת אימון נציגים</p>
+            <a href="analysis-compact.html" class="header-short-link">📋 ניתוח ביצועי שיחה מקוצר</a>
         </div>
 
         <div class="content">
@@ -477,21 +500,31 @@
             return value > 0 ? clamp01(maxTarget / value) : 0;
         }
 
+        const weightSettingsKey = 'metricWeightSettings';
+        const weightDefaults = {
+            duration: 7, disconnectedBy: 8, averageResponse: 12,
+            maxResponse: 10, politeness: 6, nameAddress: 4,
+            longPause: 4, ratio: 4, script: 15,
+            repeatedIssue: 10, additionalHelp: 8, customerIdentification: 12
+        };
+
+        function loadWeightSettings() {
+            try {
+                const raw = localStorage.getItem(weightSettingsKey);
+                if (!raw) return Object.assign({}, weightDefaults);
+                const parsed = JSON.parse(raw);
+                const result = {};
+                Object.keys(weightDefaults).forEach(k => {
+                    result[k] = Number(parsed[k] ?? weightDefaults[k]);
+                });
+                return result;
+            } catch (_e) {
+                return Object.assign({}, weightDefaults);
+            }
+        }
+
         function buildCompositeScore(inputs) {
-            const weights = {
-                duration: 7,
-                disconnectedBy: 8,
-                averageResponse: 12,
-                maxResponse: 10,
-                politeness: 6,
-                nameAddress: 4,
-                longPause: 4,
-                ratio: 4,
-                script: 15,
-                repeatedIssue: 10,
-                additionalHelp: 8,
-                customerIdentification: 12
-            };
+            const weights = loadWeightSettings();
 
             const components = [];
 
@@ -626,7 +659,6 @@
             const conversationDirectionDisplayLabel = data.conversationDirectionDisplayLabel || (conversationDirection === 'outgoing' ? '📤 שיחה יוצאת' : '📥 שיחה נכנסת');
             const scenarioDifficultyLevel = data.scenarioDifficultyLevel || 'basic';
             const scenarioDifficultyLabel = data.scenarioDifficultyLabel || 'בסיסי';
-            const difficultyClass = getDifficultyClass(scenarioDifficultyLevel);
             const domainFeedback = getDomainFeedbackSuffix(professionalDomain);
             const averageResponse = hasAverageResponseMetric
                 ? (data.averageResponseLabel || '0.0 שניות')
@@ -902,11 +934,11 @@
                     <div class="score-meta">חישוב על בסיס משוקלל לפי חשיבות המדדים | כיסוי משקל: ${compositeScore.usedWeight}%</div>
                 </div>
                 <div class="summary-strip">
-                    <span class="summary-pill">👤 שם הסוכן: ${agentFirstName || '(לא הוזן)'}</span>
-                    <span class="summary-pill">🧭 תחום מקצועי: ${professionalDomainLabel}</span>
-                    <span class="summary-pill">🧑 סוג לקוח: ${customerType}</span>
-                    <span class="summary-pill">📞 ${conversationDirectionDisplayLabel}</span>
-                    <span class="summary-pill ${difficultyClass}">🎯 רמת קושי: ${scenarioDifficultyLabel}</span>
+                    <span class="summary-pill">👤 ${agentFirstName || '(לא הוזן)'}</span>
+                    <span class="summary-pill">📞 ${conversationDirection === 'outgoing' ? 'יוצאת' : 'נכנסת'}</span>
+                    <span class="summary-pill">🧭 ${professionalDomainLabel}</span>
+                    <span class="summary-pill">🎯 ${scenarioDifficultyLabel}</span>
+                    <span class="summary-pill">🧑 ${customerType}</span>
                 </div>
                 <div class="metric-card">
                     <div class="metric-header">

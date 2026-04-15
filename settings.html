@@ -169,6 +169,13 @@
             text-align: center;
         }
 
+        .setting-input input.report-email-input {
+            width: 320px;
+            max-width: 100%;
+            text-align: right;
+            direction: ltr;
+        }
+
         .setting-input select {
             min-width: 140px;
             padding: 8px 12px;
@@ -342,6 +349,13 @@
                         </select>
                     </div>
                 </div>
+
+                <div class="setting-item">
+                    <div class="setting-label"><span class="setting-label-icon">📧</span>אימייל לשליחת דוחות ניתוח שיחה</div>
+                    <div class="setting-input">
+                        <input type="email" id="reportRecipientEmail" class="report-email-input" placeholder="name@example.com" autocomplete="email">
+                    </div>
+                </div>
             </div>
 
             <div class="script-section-title">🧩 סקריפטים לפתיחה וסגירה</div>
@@ -375,6 +389,7 @@
             document.getElementById('conversationDirection').value = localStorage.getItem('conversationDirection') || 'incoming';
             document.getElementById('appLanguage').value = localStorage.getItem('appLanguage') || 'he';
             document.getElementById('conversationMode').value = localStorage.getItem('conversationMode') || 'auto';
+            document.getElementById('reportRecipientEmail').value = localStorage.getItem('reportRecipientEmail') || 'spariente777@icloud.com';
             document.getElementById('openingScriptIncoming').value = localStorage.getItem('openingScriptIncoming') || '';
             document.getElementById('openingScriptOutgoing').value = localStorage.getItem('openingScriptOutgoing') || '';
             document.getElementById('closingScript').value = localStorage.getItem('closingScript') || '';
@@ -394,6 +409,8 @@
             const conversationDirection = document.getElementById('conversationDirection').value;
             const appLanguage = document.getElementById('appLanguage').value;
             const conversationMode = document.getElementById('conversationMode').value;
+            const reportRecipientEmail = document.getElementById('reportRecipientEmail').value.trim();
+            const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
             if (impatienceTimer < 5 || impatienceTimer > 120) {
                 showSettingsError('טיימר חוסר סבלנות חייב להיות בין 5 ל-120 שניות');
@@ -410,11 +427,17 @@
                 return;
             }
 
+            if (!emailPattern.test(reportRecipientEmail)) {
+                showSettingsError('יש להזין כתובת אימייל תקינה לשליחת דוחות ניתוח');
+                return;
+            }
+
             localStorage.setItem('impatienceTimer', impatienceTimer);
             localStorage.setItem('disconnectTimer', disconnectTimer);
             localStorage.setItem('conversationDirection', conversationDirection);
             localStorage.setItem('appLanguage', appLanguage);
             localStorage.setItem('conversationMode', conversationMode);
+            localStorage.setItem('reportRecipientEmail', reportRecipientEmail);
             localStorage.setItem('openingScriptIncoming', document.getElementById('openingScriptIncoming').value.trim());
             localStorage.setItem('openingScriptOutgoing', document.getElementById('openingScriptOutgoing').value.trim());
             localStorage.setItem('closingScript', document.getElementById('closingScript').value.trim());

@@ -138,6 +138,12 @@
             font-weight: 600;
         }
 
+        #statusType {
+            white-space: pre;
+            justify-self: end;
+            text-align: left;
+        }
+
         .status-dot {
             width: 18px;
             height: 18px;
@@ -313,7 +319,7 @@
         }
 
         #endBtn {
-            background: #ef4444;
+            background: var(--primary);
             color: #ffffff;
         }
 
@@ -452,6 +458,10 @@
             }
         }
     </style>
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
+    <script src="config.js" onerror="window.APP_CONFIG=window.APP_CONFIG||{}"></script>
+    <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
 </head>
 <body>
     <div class="page">
@@ -473,7 +483,7 @@
         <div class="controls">
             <div class="controls-row">
                 <div>
-                    <label for="conversationType">בחר תחום מקצועי</label>
+                    <label for="conversationType">🧭 תחום מקצועי</label>
                     <select id="conversationType">
                         <option value="sales">מכירה</option>
                         <option value="service">שירות לקוחות</option>
@@ -605,6 +615,11 @@
         let noFemaleVoiceWarningShown = false;
         let cachedTTSVoices = [];
         let selectedCustomerVoices = { male: null, female: null, neutral: null };
+        let googleTTSSelectedVoices = { male: null, female: null, neutral: null };
+        let activeGoogleTTSAudio = null;
+        let googleOAuthTokenClient = null;
+        let googleOAuthTokenClientId = '';
+        let pendingGoogleOAuthTokenPromise = null;
 
         // AI conversation state
         let conversationHistory = [];
@@ -624,6 +639,11 @@
         function hideInlineError() {
             const el = document.getElementById('inlineError');
             if (el) el.style.display = 'none';
+        }
+
+        function setConversationSelectorsLocked(isLocked) {
+            conversationType.disabled = isLocked;
+            difficultyLevel.disabled = isLocked;
         }
 
         // ─── Thinking indicator ────────────────────────────────────────────────────
@@ -752,6 +772,301 @@ STRICT RULES:
         }
         initTTSVoices();
         let activeCustomerUtterance = null;
+
+        // ─── Google Cloud TTS helpers ───────────────────────────────────────────
+        function getGoogleTTSSsmlGender(gender) {
+            return gender === 'female'
+                ? 'FEMALE'
+                : gender === 'male'
+                    ? 'MALE'
+                    : 'NEUTRAL';
+        }
+
+        function getGoogleTTSVoiceCandidates(gender, langCode) {
+            const g = gender === 'female' ? 'female' : gender === 'male' ? 'male' : 'neutral';
+            const pools = {
+                'he-IL': {
+                    // Keep only broadly supported Hebrew voices for stable playback.
+                    female: ['he-IL-Wavenet-A', 'he-IL-Wavenet-C', 'he-IL-Standard-A', 'he-IL-Standard-C'],
+                    male: ['he-IL-Wavenet-B', 'he-IL-Wavenet-D', 'he-IL-Standard-B', 'he-IL-Standard-D'],
+                    neutral: ['he-IL-Wavenet-A', 'he-IL-Wavenet-B', 'he-IL-Standard-A', 'he-IL-Standard-B']
+                },
+                'en-US': {
+                    female: ['en-US-Wavenet-C', 'en-US-Wavenet-F', 'en-US-Wavenet-H', 'en-US-Standard-C'],
+                    male: ['en-US-Wavenet-A', 'en-US-Wavenet-B', 'en-US-Wavenet-D', 'en-US-Standard-A'],
+                    neutral: ['en-US-Wavenet-C', 'en-US-Wavenet-A', 'en-US-Standard-C', 'en-US-Standard-A']
+                }
+            };
+
+            const langPool = pools[langCode] || pools['en-US'];
+            const selected = googleTTSSelectedVoices[g];
+            const list = [];
+
+            const shuffledPool = [...langPool[g]].sort(() => Math.random() - 0.5);
+
+            // First attempt: let Google auto-pick by gender for best compatibility.
+            list.push({ languageCode: langCode, ssmlGender: getGoogleTTSSsmlGender(g) });
+
+            // Hebrew: randomize voice order per utterance to avoid fixed voice.
+            if (langCode === 'he-IL') {
+                for (const voiceName of shuffledPool) {
+                    list.push({ languageCode: langCode, name: voiceName });
+                }
+                return list;
+            }
+
+            // Non-Hebrew: keep remembered voice preference with deterministic fallback order.
+            if (selected) {
+                list.push({ languageCode: langCode, name: selected });
+            }
+            for (const voiceName of langPool[g]) {
+                if (!selected || voiceName !== selected) {
+                    list.push({ languageCode: langCode, name: voiceName });
+                }
+            }
+            return list;
+        }
+
+        function resolveGoogleTTSVoiceName(gender, langCode) {
+            const candidates = getGoogleTTSVoiceCandidates(gender, langCode);
+            const named = candidates.find((c) => c.name);
+            return named?.name || `${langCode} (auto)`;
+        }
+
+        function getGoogleTTSCredential() {
+            return (window.APP_CONFIG && window.APP_CONFIG.googleTTSApiKey)
+                ? window.APP_CONFIG.googleTTSApiKey
+                : (localStorage.getItem('googleTTSApiKey') || '');
+        }
+
+        function getGoogleOAuthClientId() {
+            return (window.APP_CONFIG && window.APP_CONFIG.googleOAuthClientId)
+                ? window.APP_CONFIG.googleOAuthClientId
+                : (localStorage.getItem('googleOAuthClientId') || '');
+        }
+
+        function getStoredGoogleOAuthToken() {
+            const token = localStorage.getItem('googleTTSOAuthAccessToken') || '';
+            const expiresAt = Number(localStorage.getItem('googleTTSOAuthExpiresAt') || '0');
+            if (!token || !expiresAt) return '';
+            // Safety margin so token does not expire mid-request.
+            return Date.now() < (expiresAt - 15000) ? token : '';
+        }
+
+        function storeGoogleOAuthToken(accessToken, expiresInSec) {
+            const ttlMs = Math.max(0, Number(expiresInSec || 0) * 1000);
+            const expiresAt = Date.now() + ttlMs;
+            localStorage.setItem('googleTTSOAuthAccessToken', accessToken || '');
+            localStorage.setItem('googleTTSOAuthExpiresAt', String(expiresAt));
+        }
+
+        function getCurrentGoogleOAuthOrigin() {
+            return window.location.protocol === 'file:'
+                ? 'file:// (not supported by Google OAuth web client)'
+                : window.location.origin;
+        }
+
+        function buildGoogleOAuthSetupHint(errorCode) {
+            const origin = getCurrentGoogleOAuthOrigin();
+            const clientId = getGoogleOAuthClientId() || 'unknown-client-id';
+            const base = `OAuth error: ${errorCode}. Origin: ${origin}. Client ID: ${clientId}.`;
+            const action = window.location.protocol === 'file:'
+                ? 'Open the app from http://localhost (for example http://localhost:3000) and add that origin in Google Cloud Console -> APIs & Services -> Credentials -> OAuth 2.0 Client IDs -> Authorized JavaScript origins.'
+                : `Add this exact origin to Authorized JavaScript origins: ${origin}`;
+            return `${base} ${action}`;
+        }
+
+        async function waitForGoogleIdentityServices(timeoutMs = 8000) {
+            const started = Date.now();
+            while (Date.now() - started < timeoutMs) {
+                if (window.google?.accounts?.oauth2) return true;
+                await new Promise((resolve) => setTimeout(resolve, 100));
+            }
+            return false;
+        }
+
+        async function getGoogleOAuthAccessToken() {
+            const cachedToken = getStoredGoogleOAuthToken();
+            if (cachedToken) return cachedToken;
+
+            const clientId = getGoogleOAuthClientId();
+            if (!clientId) return '';
+
+            if (window.location.protocol === 'file:') {
+                addMessageWithoutTimerReset('⚠️ OAuth 2.0 לא יעבוד מפתיחה ישירה של קובץ. פתח את האפליקציה דרך http://localhost ולא דרך file://.', 'system');
+                return '';
+            }
+
+            const gisReady = await waitForGoogleIdentityServices();
+            if (!gisReady) {
+                addMessageWithoutTimerReset('⚠️ Google Identity Services לא נטען. בדוק חיבור אינטרנט ונסה שוב.', 'system');
+                return '';
+            }
+
+            if (!googleOAuthTokenClient || googleOAuthTokenClientId !== clientId) {
+                googleOAuthTokenClient = window.google.accounts.oauth2.initTokenClient({
+                    client_id: clientId,
+                    scope: 'https://www.googleapis.com/auth/cloud-platform',
+                    callback: () => {}
+                });
+                googleOAuthTokenClientId = clientId;
+            }
+
+            if (pendingGoogleOAuthTokenPromise) {
+                return pendingGoogleOAuthTokenPromise;
+            }
+
+            pendingGoogleOAuthTokenPromise = new Promise((resolve) => {
+                googleOAuthTokenClient.callback = (response) => {
+                    if (response?.error || !response?.access_token) {
+                        if (response?.error) {
+                            const hint = buildGoogleOAuthSetupHint(response.error);
+                            addMessageWithoutTimerReset(`⚠️ ${hint}`, 'system');
+                        }
+                        pendingGoogleOAuthTokenPromise = null;
+                        resolve('');
+                        return;
+                    }
+
+                    storeGoogleOAuthToken(response.access_token, response.expires_in || 3600);
+                    pendingGoogleOAuthTokenPromise = null;
+                    resolve(response.access_token);
+                };
+
+                try {
+                    googleOAuthTokenClient.requestAccessToken({ prompt: 'consent' });
+                } catch (err) {
+                    addMessageWithoutTimerReset(`⚠️ OAuth התחברות נכשלה: ${err?.message || err}`, 'system');
+                    pendingGoogleOAuthTokenPromise = null;
+                    resolve('');
+                }
+            });
+
+            return pendingGoogleOAuthTokenPromise;
+        }
+
+        function getGoogleTTSAuthConfig(credential) {
+            const token = (credential || '').trim();
+            if (!token) return null;
+
+            // Google API keys usually start with AIza.
+            if (token.startsWith('AIza')) {
+                return {
+                    url: `https://texttospeech.googleapis.com/v1/text:synthesize?key=${encodeURIComponent(token)}`,
+                    headers: { 'Content-Type': 'application/json' },
+                    mode: 'api-key'
+                };
+            }
+
+            // Google user OAuth access tokens typically start with ya29.
+            if (token.startsWith('ya29.')) {
+                return {
+                    url: 'https://texttospeech.googleapis.com/v1/text:synthesize',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        Authorization: `Bearer ${token}`
+                    },
+                    mode: 'oauth-token'
+                };
+            }
+
+            return {
+                mode: 'invalid-credential'
+            };
+        }
+
+        async function speakWithGoogleTTS(text, gender, langCode, prosody) {
+            const credential = getGoogleTTSCredential();
+            let auth = getGoogleTTSAuthConfig(credential);
+            if (!auth || auth.mode === 'invalid-credential') {
+                const oauthToken = await getGoogleOAuthAccessToken();
+                auth = getGoogleTTSAuthConfig(oauthToken);
+            }
+            if (!auth || auth.mode === 'invalid-credential') {
+                addMessageWithoutTimerReset('⚠️ לא נמצא אישור תקף ל-Google TTS. השתמש ב-API key שמתחיל ב-AIza או התחבר ב-OAuth 2.0.', 'system');
+                return false;
+            }
+
+            const voiceCandidates = getGoogleTTSVoiceCandidates(gender, langCode);
+            const googleDefaultText = normalizeCustomerSpeechText(text);
+
+            try {
+                let lastErrorMsg = '';
+                for (const voiceCandidate of voiceCandidates) {
+                    const requestBody = {
+                        input: { text: googleDefaultText },
+                        voice: voiceCandidate,
+                        audioConfig: {
+                            audioEncoding: 'MP3'
+                        }
+                    };
+
+                    const response = await fetch(auth.url, {
+                        method: 'POST',
+                        headers: auth.headers,
+                        body: JSON.stringify(requestBody)
+                    });
+
+                    if (!response.ok) {
+                        const errText = await response.text();
+                        try {
+                            const errJson = JSON.parse(errText);
+                            lastErrorMsg = errJson?.error?.message || errText;
+                        } catch {
+                            lastErrorMsg = errText;
+                        }
+                        continue;
+                    }
+
+                    const data = await response.json();
+                    if (!data.audioContent) {
+                        lastErrorMsg = 'לא התקבל audioContent מהשירות.';
+                        continue;
+                    }
+
+                    if (voiceCandidate.name && langCode !== 'he-IL') {
+                        const normalizedGender = gender === 'female' ? 'female' : gender === 'male' ? 'male' : 'neutral';
+                        googleTTSSelectedVoices[normalizedGender] = voiceCandidate.name;
+                    }
+
+                    const binaryStr = atob(data.audioContent);
+                    const bytes = new Uint8Array(binaryStr.length);
+                    for (let i = 0; i < binaryStr.length; i++) bytes[i] = binaryStr.charCodeAt(i);
+                    const audioBlob = new Blob([bytes], { type: 'audio/mpeg' });
+                    const audioUrl = URL.createObjectURL(audioBlob);
+                    const audio = new Audio(audioUrl);
+                    activeGoogleTTSAudio = audio;
+
+                    return new Promise((resolve) => {
+                        audio.onended = () => {
+                            URL.revokeObjectURL(audioUrl);
+                            if (activeGoogleTTSAudio === audio) activeGoogleTTSAudio = null;
+                            resolve(true);
+                        };
+                        audio.onerror = () => {
+                            URL.revokeObjectURL(audioUrl);
+                            if (activeGoogleTTSAudio === audio) activeGoogleTTSAudio = null;
+                            resolve(false);
+                        };
+                        audio.play().catch(() => {
+                            URL.revokeObjectURL(audioUrl);
+                            if (activeGoogleTTSAudio === audio) activeGoogleTTSAudio = null;
+                            resolve(false);
+                        });
+                    });
+                }
+
+                const authHint = auth.mode === 'oauth-token'
+                    ? 'נשלח OAuth token. ודא שזה Google OAuth access token בתוקף.'
+                    : 'נשלח API key. ודא שה-Cloud Text-to-Speech API מופעל עבור הפרויקט.';
+                addMessageWithoutTimerReset(`⚠️ Google TTS נכשל לאחר מספר ניסיונות: ${lastErrorMsg || 'שגיאה לא מזוהה.'} ${authHint}`, 'system');
+                return false;
+            } catch (e) {
+                addMessageWithoutTimerReset(`⚠️ Google TTS שגיאת רשת: ${e.message}`, 'system');
+                return false;
+            }
+        }
+        // ───────────────────────────────────────────────────────────────────────
         let pendingCustomerDisconnect = null;
         let isCustomerSpeechPlaying = false;
         let customerSpeechQueue = [];
@@ -1057,7 +1372,45 @@ STRICT RULES:
             return Math.min(max, Math.max(min, value));
         }
 
-        function normalizeCustomerSpeechText(text) {
+        function formatSensitiveNumbersForSpeech(text) {
+            const source = String(text || '');
+            const sensitiveNumberPattern = /((?:(?:ה)?מספר\s*)?(?:תעודת\s*זהות|ת\.?\s*ז\.?|טלפון|phone|telephone|id(?:entification)?)(?:\s*(?:number|num|no\.?|#))?\s*(?:שלי|שלו|שלה|הוא|היא|is|:|-)?\s*)(\d[\d\-\s]{3,})/giu;
+
+            const contextual = source.replace(sensitiveNumberPattern, (fullMatch, prefix, numberPart) => {
+                const digits = String(numberPart || '').replace(/\D/g, '');
+                if (digits.length < 4) {
+                    return fullMatch;
+                }
+
+                // Force digit-by-digit pronunciation in browser TTS with explicit short pauses.
+                const digitByDigit = digits.split('').join(', ');
+                return `${prefix}${digitByDigit}`;
+            });
+
+            // Hard fallback: any long standalone number is spoken digit-by-digit.
+            // This guarantees ID-like values are never read as one whole number.
+            return contextual.replace(/\b\d{7,12}\b/g, (digits) => digits.split('').join(', '));
+        }
+
+        function formatSensitiveNumbersForGoogleSsml(text) {
+            const source = String(text || '');
+            const sensitiveNumberPattern = /((?:(?:ה)?מספר\s*)?(?:תעודת\s*זהות|ת\.?\s*ז\.?|טלפון|phone|telephone|id(?:entification)?)(?:\s*(?:number|num|no\.?|#))?\s*(?:שלי|שלו|שלה|הוא|היא|is|:|-)?\s*)((?:\d[\d\-\s]*){4,})/giu;
+
+            const contextual = source.replace(sensitiveNumberPattern, (fullMatch, prefix, numberPart) => {
+                const digits = String(numberPart || '').replace(/\D/g, '');
+                if (digits.length < 4) {
+                    return fullMatch;
+                }
+
+                // Google SSML: force explicit character-by-character reading.
+                return `${prefix}<say-as interpret-as="characters">${digits}</say-as>`;
+            });
+
+            // Hard fallback: any long standalone number is rendered character-by-character.
+            return contextual.replace(/\b(\d{7,12})\b/g, '<say-as interpret-as="characters">$1</say-as>');
+        }
+
+        function normalizeCustomerSpeechTextBase(text) {
             // Strip markdown artifacts that AI occasionally emits.
             let cleaned = String(text || '')
                 .replace(/\*\*?|#+|_{1,2}|~~|`+/g, '')
@@ -1067,6 +1420,10 @@ STRICT RULES:
             if (!cleaned) return '';
             if (/[.!?…]$/.test(cleaned)) return cleaned;
             return `${cleaned}.`;
+        }
+
+        function normalizeCustomerSpeechText(text) {
+            return normalizeCustomerSpeechTextBase(formatSensitiveNumbersForSpeech(text));
         }
 
         function splitSpeechIntoChunks(text) {
@@ -1090,35 +1447,36 @@ STRICT RULES:
             }
 
             const pauseForChunk = (chunkText) => {
-                if (/[?]$/.test(chunkText)) return 180;
-                if (/[!]$/.test(chunkText)) return 140;
-                if (/[.…]$/.test(chunkText)) return 190;
-                return 90;
+                // Slightly longer inter-chunk pauses improve perceived naturalness.
+                if (/[?]$/.test(chunkText)) return 220;
+                if (/[!]$/.test(chunkText)) return 180;
+                if (/[.…]$/.test(chunkText)) return 250;
+                return 130;
             };
 
             return merged.map((chunk, index) => ({
                 text: chunk,
-                pauseAfterMs: index === merged.length - 1 ? 70 : pauseForChunk(chunk)
+                pauseAfterMs: index === merged.length - 1 ? 90 : pauseForChunk(chunk)
             }));
         }
 
         function getHumanProsody(text, targetGender, resolvedVoiceGender, speechStyle = null) {
-            // Hebrew TTS sounds more natural at a slightly faster base rate.
-            let rate = 1.08;
+            // Keep baseline close to real conversational speed.
+            let rate = 1.03;
             let pitch = 1;
 
             if (targetGender === 'female') {
-                pitch = 1.10;
+                pitch = 1.06;
             } else if (targetGender === 'male') {
                 pitch = 0.94;
             }
 
             const t = text || '';
-            // Exclamations → faster & higher; questions → slower & rising intonation.
-            if (t.includes('!')) { rate += 0.06; pitch += 0.04; }
-            if (t.includes('?')) { rate -= 0.02; }
-            if (/[?]$/.test(t)) { pitch += 0.08; rate -= 0.02; }
-            else if (/[!]$/.test(t)) { pitch += 0.04; rate += 0.03; }
+            // Gentler contours to avoid robotic over-expression.
+            if (t.includes('!')) { rate += 0.02; pitch += 0.03; }
+            if (t.includes('?')) { rate -= 0.01; }
+            if (/[?]$/.test(t)) { pitch += 0.06; rate -= 0.01; }
+            else if (/[!]$/.test(t)) { pitch += 0.03; rate += 0.02; }
             else if (/[.…]$/.test(t)) { rate -= 0.02; }
 
             if (speechStyle?.rateDelta) rate += speechStyle.rateDelta;
@@ -1126,21 +1484,59 @@ STRICT RULES:
 
             // Fallback when only opposite-gender voice exists.
             if (targetGender === 'female' && resolvedVoiceGender !== 'female') {
-                pitch = 1.22;
-                rate = Math.min(rate, 1.06);
+                pitch = 1.13;
+                rate = Math.min(rate, 1.02);
             } else if (targetGender === 'male' && resolvedVoiceGender !== 'male') {
-                pitch = 0.86;
+                pitch = 0.90;
             }
 
-            // Wider randomized variation for more human-sounding rhythm.
-            rate  += (Math.random() - 0.5) * 0.08;
-            pitch += (Math.random() - 0.5) * 0.10;
+            // Smaller jitter keeps continuity between adjacent sentences.
+            rate  += (Math.random() - 0.5) * 0.04;
+            pitch += (Math.random() - 0.5) * 0.06;
 
             return {
-                rate:   clamp(rate,   0.95, 1.30),
-                pitch:  clamp(pitch,  0.75, 1.45),
-                volume: clamp(0.95 + (Math.random() - 0.5) * 0.06, 0.90, 1)
+                rate:   clamp(rate,   0.94, 1.14),
+                pitch:  clamp(pitch,  0.88, 1.16),
+                volume: clamp(0.96 + (Math.random() - 0.5) * 0.03, 0.92, 1)
             };
+        }
+
+        function escapeXml(text) {
+            return String(text || '')
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&apos;');
+        }
+
+        function toGoogleSsml(text, prosody) {
+            const normalized = normalizeCustomerSpeechTextBase(text);
+            const withDigitTags = formatSensitiveNumbersForGoogleSsml(normalized);
+            const sayAsTokenPattern = /(<say-as interpret-as="digits">\d+<\/say-as>)/g;
+            const withNaturalPauses = withDigitTags
+                .split(sayAsTokenPattern)
+                .map((part) => {
+                    if (!part) return '';
+                    if (part.startsWith('<say-as interpret-as="digits">')) {
+                        return part;
+                    }
+                    return escapeXml(part)
+                        .replace(/([,،])/g, '$1<break time="180ms"/>')
+                        .replace(/([;:])/g, '$1<break time="240ms"/>')
+                        .replace(/([.])/g, '$1<break time="320ms"/>')
+                        .replace(/([!])/g, '$1<break time="300ms"/>')
+                        .replace(/([?])/g, '$1<break time="340ms"/>')
+                        .replace(/([…])/g, '$1<break time="380ms"/>');
+                })
+                .join('');
+
+            const ratePercent = Math.round((clamp(prosody?.rate ?? 1, 0.9, 1.1) - 1) * 100);
+            const pitchSemi = ((clamp(prosody?.pitch ?? 1, 0.88, 1.16) - 1) * 10).toFixed(1);
+            const rateAttr = `${ratePercent >= 0 ? '+' : ''}${ratePercent}%`;
+            const pitchAttr = `${Number(pitchSemi) >= 0 ? '+' : ''}${pitchSemi}st`;
+
+            return `<speak><prosody rate="${rateAttr}" pitch="${pitchAttr}">${withNaturalPauses}</prosody></speak>`;
         }
 
         function findCustomerVoice(targetGender = 'neutral') {
@@ -1195,8 +1591,8 @@ STRICT RULES:
                 || findCustomerVoice('neutral');
         }
 
-        function tryPlayNextCustomerMessage() {
-            if (!customerSpeechEnabled || !('speechSynthesis' in window)) {
+        async function tryPlayNextCustomerMessage() {
+            if (!customerSpeechEnabled) {
                 return;
             }
 
@@ -1219,51 +1615,110 @@ STRICT RULES:
                 return;
             }
 
-            const utterance = new SpeechSynthesisUtterance(nextMessage.text);
-            const voice = resolveCustomerVoice(nextMessage.gender);
-            if (voice) {
-                utterance.voice = voice;
-                // Use voice's native language for correct pronunciation
-                utterance.lang = isTargetLanguageVoice(voice) ? (currentLanguage === 'en' ? 'en-US' : 'he-IL') : voice.lang;
+            const googleCredential = getGoogleTTSCredential();
+            const googleOAuthClientId = getGoogleOAuthClientId();
+            const shouldAttemptGoogleTTS = Boolean(googleCredential || googleOAuthClientId);
+
+            if (shouldAttemptGoogleTTS) {
+                // ── Google Cloud TTS path ─────────────────────────────────────
+                isCustomerSpeechPlaying = true;
+                const langCode = currentLanguage === 'en' ? 'en-US' : 'he-IL';
+                const prosody = getHumanProsody(nextMessage.text, nextMessage.gender, nextMessage.gender, getScenarioSpeechStyle(currentScenario));
+                if (customerVoiceDebugMode) {
+                    const auth = getGoogleTTSAuthConfig(getGoogleTTSCredential());
+                    const voiceName = resolveGoogleTTSVoiceName(nextMessage.gender, langCode);
+                    addMessageWithoutTimerReset(`DEBUG_TTS_ENGINE | engine:google-tts | auth:${auth?.mode || 'auto-oauth'} | lang:${langCode}`, 'system');
+                    addMessageWithoutTimerReset(`[Google TTS] voice:${voiceName} | rate:${prosody.rate.toFixed(2)} | pitch:${((prosody.pitch - 1.0) * 10).toFixed(1)}st`, 'system');
+                }
+                const playedWithGoogle = await speakWithGoogleTTS(nextMessage.text, nextMessage.gender, langCode, prosody);
+                isCustomerSpeechPlaying = false;
+                if (playedWithGoogle) {
+                    setTimeout(tryPlayNextCustomerMessage, nextMessage.pauseAfterMs || 120);
+                    return;
+                }
+
+                // If Google TTS failed, fallback to browser TTS when available.
+                if (!('speechSynthesis' in window)) {
+                    setTimeout(tryPlayNextCustomerMessage, nextMessage.pauseAfterMs || 120);
+                    return;
+                }
+
+                const utterance = new SpeechSynthesisUtterance(nextMessage.text);
+                const voice = resolveCustomerVoice(nextMessage.gender);
+                if (voice) {
+                    utterance.voice = voice;
+                    utterance.lang = isTargetLanguageVoice(voice) ? (currentLanguage === 'en' ? 'en-US' : 'he-IL') : voice.lang;
+                } else {
+                    utterance.lang = currentLanguage === 'en' ? 'en-US' : 'he-IL';
+                }
+                const resolvedVoiceGender = guessVoiceGender(voice);
+                const fallbackProsody = getHumanProsody(nextMessage.text, nextMessage.gender, resolvedVoiceGender, getScenarioSpeechStyle(currentScenario));
+                utterance.rate = fallbackProsody.rate;
+                utterance.pitch = fallbackProsody.pitch;
+                utterance.volume = fallbackProsody.volume;
+
+                if (customerVoiceDebugMode) {
+                    addMessageWithoutTimerReset('DEBUG_TTS_ENGINE | engine:browser-speechsynthesis | reason:google-fallback', 'system');
+                }
+
+                activeCustomerUtterance = utterance;
+                isCustomerSpeechPlaying = true;
+                utterance.onend = () => {
+                    if (activeCustomerUtterance === utterance) activeCustomerUtterance = null;
+                    isCustomerSpeechPlaying = false;
+                    setTimeout(tryPlayNextCustomerMessage, nextMessage.pauseAfterMs || 120);
+                };
+                utterance.onerror = () => {
+                    if (activeCustomerUtterance === utterance) activeCustomerUtterance = null;
+                    isCustomerSpeechPlaying = false;
+                    setTimeout(tryPlayNextCustomerMessage, nextMessage.pauseAfterMs || 120);
+                };
+                window.speechSynthesis.speak(utterance);
             } else {
-                utterance.lang = currentLanguage === 'en' ? 'en-US' : 'he-IL';
-            }
-            const resolvedVoiceGender = guessVoiceGender(voice);
-            const prosody = getHumanProsody(nextMessage.text, nextMessage.gender, resolvedVoiceGender, getScenarioSpeechStyle(currentScenario));
-            utterance.rate = prosody.rate;
-            utterance.pitch = prosody.pitch;
-            utterance.volume = prosody.volume;
-
-            if (customerVoiceDebugMode) {
-                const allTarget = (cachedTTSVoices.length > 0 ? cachedTTSVoices : window.speechSynthesis.getVoices()).filter(v => isTargetLanguageVoice(v));
-                const voiceList = allTarget.length > 0 ? allTarget.map(v => `${v.name}(${guessVoiceGender(v)})`).join(' | ') : 'no target voices';
-                const debugText = `DEBUG | target:${nextMessage.gender} | voice:${voice?.name || 'none'} | detected:${resolvedVoiceGender} | lang:${utterance.lang} | rate:${utterance.rate.toFixed(2)} | pitch:${utterance.pitch.toFixed(2)} | voices: ${voiceList}`;
-                addMessageWithoutTimerReset(debugText, 'system');
-            }
-
-
-            activeCustomerUtterance = utterance;
-            isCustomerSpeechPlaying = true;
-            utterance.onend = () => {
-                if (activeCustomerUtterance === utterance) {
-                    activeCustomerUtterance = null;
+                // ── Browser Web Speech API (fallback) ────────────────────────
+                if (!('speechSynthesis' in window)) {
+                    return;
                 }
-                isCustomerSpeechPlaying = false;
-                setTimeout(tryPlayNextCustomerMessage, nextMessage.pauseAfterMs || 120);
-            };
-            utterance.onerror = () => {
-                if (activeCustomerUtterance === utterance) {
-                    activeCustomerUtterance = null;
+                const utterance = new SpeechSynthesisUtterance(nextMessage.text);
+                const voice = resolveCustomerVoice(nextMessage.gender);
+                if (voice) {
+                    utterance.voice = voice;
+                    utterance.lang = isTargetLanguageVoice(voice) ? (currentLanguage === 'en' ? 'en-US' : 'he-IL') : voice.lang;
+                } else {
+                    utterance.lang = currentLanguage === 'en' ? 'en-US' : 'he-IL';
                 }
-                isCustomerSpeechPlaying = false;
-                setTimeout(tryPlayNextCustomerMessage, nextMessage.pauseAfterMs || 120);
-            };
+                const resolvedVoiceGender = guessVoiceGender(voice);
+                const prosody = getHumanProsody(nextMessage.text, nextMessage.gender, resolvedVoiceGender, getScenarioSpeechStyle(currentScenario));
+                utterance.rate = prosody.rate;
+                utterance.pitch = prosody.pitch;
+                utterance.volume = prosody.volume;
 
-            window.speechSynthesis.speak(utterance);
+                if (customerVoiceDebugMode) {
+                    addMessageWithoutTimerReset('DEBUG_TTS_ENGINE | engine:browser-speechsynthesis | reason:direct', 'system');
+                    const allTarget = (cachedTTSVoices.length > 0 ? cachedTTSVoices : window.speechSynthesis.getVoices()).filter(v => isTargetLanguageVoice(v));
+                    const voiceList = allTarget.length > 0 ? allTarget.map(v => `${v.name}(${guessVoiceGender(v)})`).join(' | ') : 'no target voices';
+                    const debugText = `DEBUG | target:${nextMessage.gender} | voice:${voice?.name || 'none'} | detected:${resolvedVoiceGender} | lang:${utterance.lang} | rate:${utterance.rate.toFixed(2)} | pitch:${utterance.pitch.toFixed(2)} | voices: ${voiceList}`;
+                    addMessageWithoutTimerReset(debugText, 'system');
+                }
+
+                activeCustomerUtterance = utterance;
+                isCustomerSpeechPlaying = true;
+                utterance.onend = () => {
+                    if (activeCustomerUtterance === utterance) activeCustomerUtterance = null;
+                    isCustomerSpeechPlaying = false;
+                    setTimeout(tryPlayNextCustomerMessage, nextMessage.pauseAfterMs || 120);
+                };
+                utterance.onerror = () => {
+                    if (activeCustomerUtterance === utterance) activeCustomerUtterance = null;
+                    isCustomerSpeechPlaying = false;
+                    setTimeout(tryPlayNextCustomerMessage, nextMessage.pauseAfterMs || 120);
+                };
+                window.speechSynthesis.speak(utterance);
+            }
         }
 
         function speakCustomerMessage(text) {
-            if (!customerSpeechEnabled || !('speechSynthesis' in window)) {
+            if (!customerSpeechEnabled) {
                 return;
             }
 
@@ -1273,6 +1728,21 @@ STRICT RULES:
             }
 
             const messageGender = inferCustomerGenderFromText(text);
+            const googleCredential = getGoogleTTSCredential();
+            const googleOAuthClientId = getGoogleOAuthClientId();
+            const shouldAttemptGoogleTTS = Boolean(googleCredential || googleOAuthClientId);
+
+            // Google default behavior: send as one utterance and let Google control pacing.
+            if (shouldAttemptGoogleTTS) {
+                customerSpeechQueue.push({
+                    text: normalizeCustomerSpeechText(messageBody),
+                    gender: messageGender,
+                    pauseAfterMs: 0
+                });
+                tryPlayNextCustomerMessage();
+                return;
+            }
+
             const chunks = splitSpeechIntoChunks(messageBody);
             if (chunks.length === 0) {
                 return;
@@ -1290,7 +1760,8 @@ STRICT RULES:
 
         function finalizeConversationAfterCustomerSpeech(disconnectedBy, systemMessage) {
             const isCustomerSpeaking = isCustomerSpeechPlaying || customerSpeechQueue.length > 0
-                || (('speechSynthesis' in window) && window.speechSynthesis.speaking);
+                || (('speechSynthesis' in window) && window.speechSynthesis.speaking)
+                || activeGoogleTTSAudio !== null;
             if (isCustomerSpeaking) {
                 pendingCustomerDisconnect = { disconnectedBy, systemMessage };
                 return;
@@ -1364,8 +1835,8 @@ STRICT RULES:
                 statusIcon.classList.add('status-active');
                 statusText.textContent = S('statusActive');
                 statusType.textContent = typeLabel
-                    ? `${S('statusDomain')}: ${typeLabel} | 📞 ${S('statusCallType')}: ${conversationDirectionLabel}${difficultyLabelText ? ` | 🎯 ${S('statusLevel')}: ${difficultyLabelText}` : ''}${modeLabelText ? ` | 🧭 ${S('statusMode')}: ${modeLabelText}` : ''}`
-                    : `📞 ${S('statusCallType')}: ${conversationDirectionLabel}`;
+                    ? `📞 ${conversationDirectionLabel}        🧭 ${typeLabel}${difficultyLabelText ? `        🎯 ${difficultyLabelText}` : ''}`
+                    : `📞 ${conversationDirectionLabel}`;
                 return;
             }
 
@@ -1439,6 +1910,250 @@ STRICT RULES:
             } catch (_err) {
                 return defaults;
             }
+        }
+
+        function loadResultMetricSettingsForReport() {
+            const defaults = {
+                targetAvgResponse: 5.0,
+                targetMaxResponse: 12.0,
+                targetConversationDuration: 240,
+                targetPolitenessCount: 3,
+                targetNameAddressCount: 1,
+                targetLongPauseCount: 0,
+                targetMinAgentCustomerRatio: 0.8,
+                targetMaxAgentCustomerRatio: 1.5,
+                targetMaxRepeatedIssueCount: 1
+            };
+
+            try {
+                const raw = localStorage.getItem('resultMetricSettings');
+                if (!raw) return defaults;
+                const parsed = JSON.parse(raw);
+                return {
+                    targetAvgResponse: Number(parsed.targetAvgResponse ?? defaults.targetAvgResponse),
+                    targetMaxResponse: Number(parsed.targetMaxResponse ?? defaults.targetMaxResponse),
+                    targetConversationDuration: Number(parsed.targetConversationDuration ?? defaults.targetConversationDuration),
+                    targetPolitenessCount: Number(parsed.targetPolitenessCount ?? defaults.targetPolitenessCount),
+                    targetNameAddressCount: Number(parsed.targetNameAddressCount ?? defaults.targetNameAddressCount),
+                    targetLongPauseCount: Number(parsed.targetLongPauseCount ?? defaults.targetLongPauseCount),
+                    targetMinAgentCustomerRatio: Number(parsed.targetMinAgentCustomerRatio ?? defaults.targetMinAgentCustomerRatio),
+                    targetMaxAgentCustomerRatio: Number(parsed.targetMaxAgentCustomerRatio ?? defaults.targetMaxAgentCustomerRatio),
+                    targetMaxRepeatedIssueCount: Number(parsed.targetMaxRepeatedIssueCount ?? defaults.targetMaxRepeatedIssueCount)
+                };
+            } catch (_err) {
+                return defaults;
+            }
+        }
+
+        function loadWeightSettingsForReport() {
+            const defaults = {
+                duration: 7,
+                disconnectedBy: 8,
+                averageResponse: 12,
+                maxResponse: 10,
+                politeness: 6,
+                nameAddress: 4,
+                longPause: 4,
+                ratio: 4,
+                script: 15,
+                repeatedIssue: 10,
+                additionalHelp: 8,
+                customerIdentification: 12
+            };
+
+            try {
+                const raw = localStorage.getItem('metricWeightSettings');
+                if (!raw) return defaults;
+                const parsed = JSON.parse(raw);
+                const result = {};
+                Object.keys(defaults).forEach((key) => {
+                    result[key] = Number(parsed[key] ?? defaults[key]);
+                });
+                return result;
+            } catch (_err) {
+                return defaults;
+            }
+        }
+
+        async function sendConversationReportEmail() {
+            const raw = localStorage.getItem(analysisResultsKey);
+            if (!raw) return;
+
+            try {
+                const analysis = JSON.parse(raw);
+                const settings = loadResultMetricSettingsForReport();
+                const weights = loadWeightSettingsForReport();
+                const pdfBase64 = await buildConversationReportPdfBase64();
+                const recipientEmail = (localStorage.getItem('reportRecipientEmail') || 'spariente777@icloud.com').trim();
+                const agentName = String(analysis.agentFirstName || analysis.detectedAgentName || 'לא צוין').trim();
+                const createdAtValue = analysis.createdAt ? new Date(analysis.createdAt) : new Date();
+                const dateTimeText = Number.isNaN(createdAtValue.getTime())
+                    ? new Date().toLocaleString('he-IL', {
+                        day: '2-digit',
+                        month: '2-digit',
+                        year: 'numeric',
+                        hour: '2-digit',
+                        minute: '2-digit',
+                        second: '2-digit',
+                        hour12: false
+                    })
+                    : createdAtValue.toLocaleString('he-IL', {
+                        day: '2-digit',
+                        month: '2-digit',
+                        year: 'numeric',
+                        hour: '2-digit',
+                        minute: '2-digit',
+                        second: '2-digit',
+                        hour12: false
+                    });
+                const mailSubject = `דוח ניתוח שיחה | סוכן: ${agentName} | סיום שיחה: ${dateTimeText}`;
+
+                const response = await fetch('/api/send-conversation-report', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        pdfBase64,
+                        mailSubject,
+                        analysis,
+                        settings,
+                        weights,
+                        recipient: recipientEmail
+                    })
+                });
+
+                if (response.ok) {
+                    addMessage('דוח PDF מלא + מקוצר נשלח אוטומטית למייל.', 'system');
+                    return;
+                }
+
+                addMessage('לא ניתן לשלוח את דוח ה-PDF במייל כרגע. יש לוודא הגדרות SMTP בשרת.', 'system');
+            } catch (_err) {
+                addMessage('שגיאה בשליחת דוח ה-PDF במייל.', 'system');
+            }
+        }
+
+        function wait(ms) {
+            return new Promise((resolve) => setTimeout(resolve, ms));
+        }
+
+        function getReportPageUrl(pathname) {
+            const suffix = pathname.includes('?') ? '&' : '?';
+            return `${pathname}${suffix}report=1&ts=${Date.now()}`;
+        }
+
+        async function captureReportPageCanvas(pathname) {
+            const iframe = document.createElement('iframe');
+            iframe.src = getReportPageUrl(pathname);
+            iframe.style.position = 'fixed';
+            iframe.style.left = '-10000px';
+            iframe.style.top = '0';
+            iframe.style.width = '1280px';
+            iframe.style.height = '2400px';
+            iframe.style.opacity = '0';
+            iframe.style.pointerEvents = 'none';
+            iframe.setAttribute('aria-hidden', 'true');
+            document.body.appendChild(iframe);
+
+            try {
+                await new Promise((resolve, reject) => {
+                    const timeoutId = setTimeout(() => reject(new Error('טעינת עמוד הדוח נכשלה (timeout).')), 15000);
+                    iframe.onload = () => {
+                        clearTimeout(timeoutId);
+                        resolve();
+                    };
+                });
+
+                await wait(900);
+
+                const doc = iframe.contentDocument;
+                if (!doc) {
+                    throw new Error('לא ניתן לגשת לתוכן עמוד הדוח.');
+                }
+
+                const target = doc.querySelector('.page') || doc.body;
+                if (!target) {
+                    throw new Error('לא נמצא אזור צילום בעמוד הדוח.');
+                }
+
+                return await window.html2canvas(target, {
+                    scale: 2,
+                    backgroundColor: '#ffffff',
+                    useCORS: true,
+                    logging: false
+                });
+            } finally {
+                iframe.remove();
+            }
+        }
+
+        function appendCanvasToPdf(pdf, sourceCanvas, shouldAddNewPage) {
+            const pageWidthMm = 210;
+            const pageHeightMm = 297;
+            const marginMm = 10;
+            const contentWidthMm = pageWidthMm - marginMm * 2;
+            const contentHeightMm = pageHeightMm - marginMm * 2;
+
+            const pxPerMm = sourceCanvas.width / contentWidthMm;
+            const maxSliceHeightPx = Math.max(1, Math.floor(contentHeightMm * pxPerMm));
+
+            let yOffsetPx = 0;
+            let firstSlice = true;
+
+            while (yOffsetPx < sourceCanvas.height) {
+                const remainingPx = sourceCanvas.height - yOffsetPx;
+                const sliceHeightPx = Math.min(maxSliceHeightPx, remainingPx);
+
+                const sliceCanvas = document.createElement('canvas');
+                sliceCanvas.width = sourceCanvas.width;
+                sliceCanvas.height = sliceHeightPx;
+                const ctx = sliceCanvas.getContext('2d');
+                ctx.drawImage(
+                    sourceCanvas,
+                    0,
+                    yOffsetPx,
+                    sourceCanvas.width,
+                    sliceHeightPx,
+                    0,
+                    0,
+                    sourceCanvas.width,
+                    sliceHeightPx
+                );
+
+                const imgData = sliceCanvas.toDataURL('image/png');
+                const sliceHeightMm = sliceHeightPx / pxPerMm;
+
+                if (shouldAddNewPage || !firstSlice) {
+                    pdf.addPage();
+                }
+
+                pdf.addImage(imgData, 'PNG', marginMm, marginMm, contentWidthMm, sliceHeightMm, undefined, 'FAST');
+
+                firstSlice = false;
+                shouldAddNewPage = true;
+                yOffsetPx += sliceHeightPx;
+            }
+        }
+
+        async function buildConversationReportPdfBase64() {
+            if (!window.html2canvas || !window.jspdf || !window.jspdf.jsPDF) {
+                throw new Error('ספריות יצירת PDF לא נטענו.');
+            }
+
+            const pages = ['analysis.html', 'analysis-compact.html'];
+            const canvases = [];
+
+            for (const pagePath of pages) {
+                canvases.push(await captureReportPageCanvas(pagePath));
+            }
+
+            const pdf = new window.jspdf.jsPDF({ orientation: 'p', unit: 'mm', format: 'a4' });
+            canvases.forEach((canvas, index) => {
+                appendCanvasToPdf(pdf, canvas, index > 0);
+            });
+
+            const dataUri = pdf.output('datauristring');
+            const parts = String(dataUri).split(',');
+            return parts.length > 1 ? parts[1] : '';
         }
 
         function normalizeMessageText(message) {
@@ -1662,20 +2377,23 @@ STRICT RULES:
             conversationStarted = false;
             startBtn.disabled = false;
             endBtn.disabled = true;
+            setConversationSelectorsLocked(false);
             agentFirstNameInput.disabled = false;
             messageInput.disabled = true;
             sendBtn.disabled = true;
             voiceBtn.disabled = true;
             stopAgentVoiceInput(false);
 
-            if ((disconnectedBy === 'הסוכן' || disconnectedBy === 'Agent') && 'speechSynthesis' in window) {
-                window.speechSynthesis.cancel();
+            if (disconnectedBy === 'הסוכן' || disconnectedBy === 'Agent') {
+                if ('speechSynthesis' in window) window.speechSynthesis.cancel();
+                if (activeGoogleTTSAudio) { activeGoogleTTSAudio.pause(); activeGoogleTTSAudio = null; }
             }
             if (stopActiveDialTone) {
                 stopActiveDialTone();
                 stopActiveDialTone = null;
             }
             activeCustomerUtterance = null;
+            activeGoogleTTSAudio = null;
             isCustomerSpeechPlaying = false;
             customerSpeechQueue = [];
             pendingCustomerDisconnect = null;
@@ -1691,6 +2409,7 @@ STRICT RULES:
 
             updateStatus('disconnected');
             saveConversationAnalysis(disconnectedBy);
+            void sendConversationReportEmail();
 
             conversationStartTimestamp = null;
             pendingCustomerMessageTimestamp = null;
@@ -2715,6 +3434,7 @@ STRICT RULES:
             conversationStarted = true;
             startBtn.disabled = true;
             endBtn.disabled = false;
+            setConversationSelectorsLocked(true);
             // Diagnostics: shown only when debug mode is enabled.
             if (customerVoiceDebugMode && 'speechSynthesis' in window) {
                 const _allVoices = window.speechSynthesis.getVoices();
@@ -2752,6 +3472,7 @@ STRICT RULES:
             offeredAdditionalHelp = false;
             customerIdentificationRequested = false;
             customerIssueOccurrences = new Map();
+            googleTTSSelectedVoices = { male: null, female: null, neutral: null };
             // Clear the chat content
             chat.innerHTML = '';
             conversationHistory = [];
@@ -2792,6 +3513,13 @@ STRICT RULES:
         endBtn.addEventListener('click', () => {
             finalizeConversation(currentLanguage === 'en' ? 'Agent' : 'הסוכן', S('disconnectedMsg'));
         });
+
+        function getChatApiUrl() {
+            // If the page is opened directly from disk, call local server explicitly.
+            return window.location.protocol === 'file:'
+                ? 'http://localhost:3000/api/chat'
+                : '/api/chat';
+        }
 
         sendBtn.addEventListener('click', () => {
             if (!conversationStarted) return;
@@ -2845,7 +3573,7 @@ STRICT RULES:
             isAwaitingAiResponse = true;
             showThinkingIndicator();
 
-            fetch('/api/chat', {
+            fetch(getChatApiUrl(), {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
@@ -2881,7 +3609,10 @@ STRICT RULES:
                 isAwaitingAiResponse = false;
                 // Roll back the history entry since we didn't get a response
                 conversationHistory.pop();
-                const errMsg = typeof err === 'string' ? err : 'שגיאת תקשורת עם השרת. ודא שהשרת פעיל ונסה שוב.';
+                let errMsg = typeof err === 'string' ? err : 'שגיאת תקשורת עם השרת. ודא שהשרת פעיל ונסה שוב.';
+                if (window.location.protocol === 'file:' && typeof err !== 'string') {
+                    errMsg = 'העמוד פתוח כקובץ מקומי. הפעל שרת ופתח דרך http://localhost:3000.';
+                }
                 showInlineError(errMsg);
             });
         });

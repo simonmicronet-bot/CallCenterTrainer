@@ -1,6 +1,7 @@
 # API keys - never commit these
 .env
 apiKey.txt
+config.js
 
 # Dependencies
 node_modules/

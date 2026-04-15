@@ -1,0 +1,499 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>מדדי ציון שיחה</title>
+    <style>
+        :root {
+            --bg: #fdf2f2;
+            --surface: #ffffff;
+            --text: #1f2937;
+            --muted: #6b7280;
+            --primary: #e8001c;
+            --primary-soft: #fde8ea;
+            --border: rgba(15, 23, 42, 0.08);
+            --shadow: 0 20px 50px rgba(15, 23, 42, 0.08);
+        }
+
+        * { box-sizing: border-box; }
+
+        body {
+            margin: 0;
+            min-height: 100vh;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            color: var(--text);
+            background: linear-gradient(180deg, #fdf2f2 0%, #f8fafc 100%);
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            padding: 24px;
+        }
+
+        .page {
+            width: min(100%, 760px);
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 28px;
+            box-shadow: var(--shadow);
+            overflow: hidden;
+        }
+
+        .header {
+            padding: 80px 32px 20px;
+            background: #ffffff;
+            border-bottom: 1px solid var(--border);
+            position: relative;
+        }
+
+        .header h1 {
+            margin: 0;
+            font-size: 1.8rem;
+            letter-spacing: 0.01em;
+        }
+
+        .header p {
+            margin: 10px 0 0;
+            color: var(--muted);
+            line-height: 1.6;
+        }
+
+        .top-logo {
+            position: absolute;
+            top: 16px;
+            left: 16px;
+            width: 96px;
+            height: 96px;
+            object-fit: contain;
+        }
+
+        .home-link {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            padding: 8px 16px;
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            background: #f8fafc;
+            color: var(--text);
+            text-decoration: none;
+            font-size: 0.9rem;
+            transition: all 0.2s ease;
+        }
+
+        .home-link:hover {
+            background: var(--primary-soft);
+            border-color: var(--primary);
+            color: var(--primary);
+        }
+
+        .content {
+            padding: 32px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.93rem;
+        }
+
+        thead tr {
+            background: var(--primary);
+            color: #ffffff;
+        }
+
+        thead th {
+            padding: 12px 16px;
+            text-align: right;
+            font-weight: 700;
+            font-size: 0.86rem;
+            letter-spacing: 0.03em;
+        }
+
+        thead th:last-child { text-align: center; }
+
+        tbody tr {
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        tbody tr:nth-child(even) { background: #f8fafc; }
+        tbody tr:last-child { border-bottom: none; }
+
+        td {
+            padding: 13px 16px;
+            vertical-align: middle;
+        }
+
+        .td-icon {
+            font-size: 1.15rem;
+            width: 44px;
+            text-align: center;
+            padding-right: 8px;
+        }
+
+        .td-name { font-weight: 600; }
+
+        .td-desc {
+            color: var(--muted);
+            font-size: 0.84rem;
+        }
+
+        .td-weight {
+            text-align: center;
+            font-weight: 800;
+            font-size: 1rem;
+            white-space: nowrap;
+            color: var(--primary);
+        }
+
+        .bar-wrap {
+            width: 110px;
+            background: #e2e8f0;
+            border-radius: 999px;
+            height: 7px;
+            display: inline-block;
+            vertical-align: middle;
+        }
+
+        .bar-fill {
+            height: 7px;
+            border-radius: 999px;
+            background: var(--primary);
+            display: block;
+        }
+
+        .total-row td {
+            background: linear-gradient(135deg, #fff5f6 0%, #fde8ea 100%) !important;
+            color: #7f1d1d;
+            font-weight: 700;
+            border-top: 2px solid rgba(232, 0, 28, 0.25);
+        }
+
+        .total-row .td-weight {
+            color: var(--primary);
+            font-size: 1.12rem;
+            font-weight: 800;
+        }
+
+        .total-state {
+            text-align: center;
+            font-size: 0.8rem;
+            font-weight: 700;
+            color: #6b7280;
+            white-space: nowrap;
+        }
+
+        .total-state.exact {
+            color: #166534;
+        }
+
+        .total-state.over {
+            color: #b91c1c;
+        }
+
+        .total-state.under {
+            color: #b91c1c;
+        }
+
+        .weight-input {
+            width: 58px;
+            padding: 5px 8px;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            font-size: 0.95rem;
+            font-family: inherit;
+            font-weight: 700;
+            color: var(--primary);
+            text-align: center;
+            background: #fff;
+            transition: border-color 0.2s;
+        }
+
+        .weight-input:focus {
+            outline: none;
+            border-color: var(--primary);
+        }
+
+        .weight-suffix {
+            font-weight: 700;
+            color: var(--primary);
+        }
+
+        .actions-row {
+            display: flex;
+            gap: 10px;
+            margin-top: 16px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .save-btn {
+            padding: 10px 22px;
+            background: var(--primary);
+            color: #fff;
+            border: none;
+            border-radius: 12px;
+            font-size: 0.9rem;
+            font-family: inherit;
+            font-weight: 700;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .save-btn:hover { background: #c0001a; }
+
+        .reset-btn {
+            padding: 10px 22px;
+            background: #f8fafc;
+            color: var(--text);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            font-size: 0.9rem;
+            font-family: inherit;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .reset-btn:hover { background: var(--primary-soft); border-color: var(--primary); color: var(--primary); }
+
+        .saved-msg {
+            display: none;
+            color: #16a34a;
+            font-weight: 700;
+            font-size: 0.9rem;
+            align-self: center;
+        }
+
+        .note {
+            margin-top: 24px;
+            font-size: 0.82rem;
+            color: var(--muted);
+            line-height: 1.7;
+            border-top: 1px solid var(--border);
+            padding-top: 16px;
+        }
+
+        @media print {
+            body { background: #fff; padding: 0; align-items: flex-start; }
+            .page { box-shadow: none; border-radius: 0; border: none; }
+            .home-link { display: none; }
+        }
+    </style>
+</head>
+<body>
+    <div class="page">
+        <div class="header">
+            <img src="logo.png" alt="לוגו" class="top-logo">
+            <a href="home.html" class="home-link">דף ראשי</a>
+            <h1>מדדי ציון הערכת שיחה</h1>
+            <p>רשימת כל המדדים הנכנסים לשקלול הציון המשוכלל, ואחוז ההשפעה של כל מדד</p>
+        </div>
+        <div class="content">
+            <table>
+                <thead>
+                    <tr>
+                        <th class="td-icon"></th>
+                        <th>מדד</th>
+                        <th>תיאור</th>
+                        <th>משקל</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody id="weightsBody">
+                    <tr>
+                        <td class="td-icon">📜</td>
+                        <td class="td-name">עמידה בסקריפט</td>
+                        <td class="td-desc">שימוש בנוסח פתיחה וסגירה שהוגדרו</td>
+                        <td class="td-weight"><input class="weight-input" data-key="script" type="number" min="0" max="100" value="15"><span class="weight-suffix">%</span></td>
+                        <td><span class="bar-wrap"><span class="bar-fill" data-bar="script" style="width:100%"></span></span></td>
+                    </tr>
+                    <tr>
+                        <td class="td-icon">⚡</td>
+                        <td class="td-name">זמן תגובה ממוצע</td>
+                        <td class="td-desc">ממוצע זמן תגובת הסוכן להודעות הלקוח</td>
+                        <td class="td-weight"><input class="weight-input" data-key="averageResponse" type="number" min="0" max="100" value="12"><span class="weight-suffix">%</span></td>
+                        <td><span class="bar-wrap"><span class="bar-fill" data-bar="averageResponse" style="width:80%"></span></span></td>
+                    </tr>
+                    <tr>
+                        <td class="td-icon">🪪</td>
+                        <td class="td-name">זיהוי לקוח</td>
+                        <td class="td-desc">האם בוצעה בקשה לזיהוי/אימות הלקוח</td>
+                        <td class="td-weight"><input class="weight-input" data-key="customerIdentification" type="number" min="0" max="100" value="12"><span class="weight-suffix">%</span></td>
+                        <td><span class="bar-wrap"><span class="bar-fill" data-bar="customerIdentification" style="width:80%"></span></span></td>
+                    </tr>
+                    <tr>
+                        <td class="td-icon">⏱️</td>
+                        <td class="td-name">זמן תגובה מקסימלי</td>
+                        <td class="td-desc">זמן ההמתנה הארוך ביותר שחווה הלקוח</td>
+                        <td class="td-weight"><input class="weight-input" data-key="maxResponse" type="number" min="0" max="100" value="10"><span class="weight-suffix">%</span></td>
+                        <td><span class="bar-wrap"><span class="bar-fill" data-bar="maxResponse" style="width:67%"></span></span></td>
+                    </tr>
+                    <tr>
+                        <td class="td-icon">🔁</td>
+                        <td class="td-name">שאלות/נושאים חוזרים</td>
+                        <td class="td-desc">מספר הפעמים שהלקוח חזר על אותו נושא</td>
+                        <td class="td-weight"><input class="weight-input" data-key="repeatedIssue" type="number" min="0" max="100" value="10"><span class="weight-suffix">%</span></td>
+                        <td><span class="bar-wrap"><span class="bar-fill" data-bar="repeatedIssue" style="width:67%"></span></span></td>
+                    </tr>
+                    <tr>
+                        <td class="td-icon">☎️</td>
+                        <td class="td-name">ניתוק על ידי לקוח</td>
+                        <td class="td-desc">האם הלקוח הוא שניתק את השיחה (לא הסוכן)</td>
+                        <td class="td-weight"><input class="weight-input" data-key="disconnectedBy" type="number" min="0" max="100" value="8"><span class="weight-suffix">%</span></td>
+                        <td><span class="bar-wrap"><span class="bar-fill" data-bar="disconnectedBy" style="width:53%"></span></span></td>
+                    </tr>
+                    <tr>
+                        <td class="td-icon">🤝</td>
+                        <td class="td-name">הצעת עזרה נוספת</td>
+                        <td class="td-desc">האם הסוכן הציע סיוע נוסף לפני סיום השיחה</td>
+                        <td class="td-weight"><input class="weight-input" data-key="additionalHelp" type="number" min="0" max="100" value="8"><span class="weight-suffix">%</span></td>
+                        <td><span class="bar-wrap"><span class="bar-fill" data-bar="additionalHelp" style="width:53%"></span></span></td>
+                    </tr>
+                    <tr>
+                        <td class="td-icon">⏳</td>
+                        <td class="td-name">משך שיחה</td>
+                        <td class="td-desc">האם משך השיחה היה בטווח היעד</td>
+                        <td class="td-weight"><input class="weight-input" data-key="duration" type="number" min="0" max="100" value="7"><span class="weight-suffix">%</span></td>
+                        <td><span class="bar-wrap"><span class="bar-fill" data-bar="duration" style="width:47%"></span></span></td>
+                    </tr>
+                    <tr>
+                        <td class="td-icon">😊</td>
+                        <td class="td-name">נימוס ושירותיות</td>
+                        <td class="td-desc">שימוש בביטויי שירות, תודה ואמפתיה</td>
+                        <td class="td-weight"><input class="weight-input" data-key="politeness" type="number" min="0" max="100" value="6"><span class="weight-suffix">%</span></td>
+                        <td><span class="bar-wrap"><span class="bar-fill" data-bar="politeness" style="width:40%"></span></span></td>
+                    </tr>
+                    <tr>
+                        <td class="td-icon">🧑</td>
+                        <td class="td-name">פנייה בשם הלקוח</td>
+                        <td class="td-desc">מספר הפעמים שהסוכן פנה ללקוח בשמו</td>
+                        <td class="td-weight"><input class="weight-input" data-key="nameAddress" type="number" min="0" max="100" value="4"><span class="weight-suffix">%</span></td>
+                        <td><span class="bar-wrap"><span class="bar-fill" data-bar="nameAddress" style="width:27%"></span></span></td>
+                    </tr>
+                    <tr>
+                        <td class="td-icon">🔇</td>
+                        <td class="td-name">השהיות ארוכות</td>
+                        <td class="td-desc">מספר ההשהיות הארוכות שנוצרו בשיחה</td>
+                        <td class="td-weight"><input class="weight-input" data-key="longPause" type="number" min="0" max="100" value="4"><span class="weight-suffix">%</span></td>
+                        <td><span class="bar-wrap"><span class="bar-fill" data-bar="longPause" style="width:27%"></span></span></td>
+                    </tr>
+                    <tr>
+                        <td class="td-icon">⚖️</td>
+                        <td class="td-name">יחס הודעות סוכן/לקוח</td>
+                        <td class="td-desc">האם יחס ההודעות היה בטווח המאוזן</td>
+                        <td class="td-weight"><input class="weight-input" data-key="ratio" type="number" min="0" max="100" value="4"><span class="weight-suffix">%</span></td>
+                        <td><span class="bar-wrap"><span class="bar-fill" data-bar="ratio" style="width:27%"></span></span></td>
+                    </tr>
+                    <tr class="total-row">
+                        <td class="td-icon" aria-hidden="true"></td>
+                        <td colspan="2"></td>
+                        <td class="td-weight" id="totalRowCell">100%</td>
+                        <td class="total-state exact" id="totalRowState">תקין</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <div class="actions-row">
+                <button class="save-btn" onclick="saveWeights()">💾 שמור שינויים</button>
+                <button class="reset-btn" onclick="resetWeights()">↺ אפס לברירת מחדל</button>
+                <span class="saved-msg" id="savedMsg">✔ נשמר בהצלחה!</span>
+            </div>
+
+            <p class="note">
+                * מדדים שאינם זמינים בשיחה (לדוג׳ זמן תגובה ממוצע בשיחה קצרה מאוד, יחס הודעות בשיחה חד-כיוונית, או סקריפט שלא הוגדר בהגדרות) — מוצאים מהשקלול, והמשקל שלהם מחולק מחדש בין שאר המדדים הזמינים.<br>
+                * הציון הסופי הוא 0–100. ציון ≥85 = מצוין, ≥70 = טוב, ≥55 = בינוני, מתחת = נדרש שיפור.<br>
+                * שינוי משקלות ישפיע על חישוב הציון של כל שיחה עתידית.
+            </p>
+        </div>
+    </div>
+
+    <script>
+        const WEIGHT_KEY = 'metricWeightSettings';
+        const DEFAULTS = {
+            script: 15, averageResponse: 12, customerIdentification: 12,
+            maxResponse: 10, repeatedIssue: 10, disconnectedBy: 8,
+            additionalHelp: 8, duration: 7, politeness: 6,
+            nameAddress: 4, longPause: 4, ratio: 4
+        };
+
+        function getInputs() {
+            return document.querySelectorAll('.weight-input');
+        }
+
+        function getTotal() {
+            let sum = 0;
+            getInputs().forEach(inp => { sum += Number(inp.value) || 0; });
+            return sum;
+        }
+
+        function getMaxWeight() {
+            let max = 0;
+            getInputs().forEach(inp => { max = Math.max(max, Number(inp.value) || 0); });
+            return max;
+        }
+
+        function updateUI() {
+            const total = getTotal();
+            const maxW = getMaxWeight();
+            const totalRow = document.getElementById('totalRowCell');
+            const totalRowState = document.getElementById('totalRowState');
+
+            totalRow.textContent = total + '%';
+            totalRowState.textContent = total === 100 ? 'תקין' : 'לא תקין';
+            totalRowState.className = total === 100 ? 'total-state exact' : (total > 100 ? 'total-state over' : 'total-state under');
+
+            getInputs().forEach(inp => {
+                const key = inp.dataset.key;
+                const bar = document.querySelector(`[data-bar="${key}"]`);
+                if (bar) {
+                    const pct = maxW > 0 ? Math.round((Number(inp.value) / maxW) * 100) : 0;
+                    bar.style.width = pct + '%';
+                }
+            });
+        }
+
+        function loadSaved() {
+            try {
+                const raw = localStorage.getItem(WEIGHT_KEY);
+                if (!raw) return;
+                const saved = JSON.parse(raw);
+                getInputs().forEach(inp => {
+                    const key = inp.dataset.key;
+                    if (saved[key] !== undefined) inp.value = saved[key];
+                });
+            } catch (_e) {}
+        }
+
+        function saveWeights() {
+            const total = getTotal();
+            if (total !== 100) {
+                alert('הסכום חייב להיות בדיוק 100%. כרגע: ' + total + '%');
+                return;
+            }
+            const obj = {};
+            getInputs().forEach(inp => { obj[inp.dataset.key] = Number(inp.value); });
+            localStorage.setItem(WEIGHT_KEY, JSON.stringify(obj));
+            const msg = document.getElementById('savedMsg');
+            msg.style.display = 'inline';
+            setTimeout(() => { msg.style.display = 'none'; }, 2500);
+        }
+
+        function resetWeights() {
+            if (!confirm('לאפס את כל המשקלות לברירת המחדל?')) return;
+            getInputs().forEach(inp => { inp.value = DEFAULTS[inp.dataset.key] ?? 0; });
+            localStorage.removeItem(WEIGHT_KEY);
+            updateUI();
+            const msg = document.getElementById('savedMsg');
+            msg.style.display = 'inline';
+            setTimeout(() => { msg.style.display = 'none'; }, 2500);
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            loadSaved();
+            updateUI();
+            getInputs().forEach(inp => inp.addEventListener('input', updateUI));
+        });
+    </script>
+</body>
+</html>
