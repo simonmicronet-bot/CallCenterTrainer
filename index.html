@@ -385,15 +385,6 @@
             margin: 16px 0 0;
         }
 
-        .system[data-debug="true"] {
-            background: #e6f3ff;
-            color: #0066cc;
-            border-left: 4px solid #0066cc;
-            padding-left: 14px;
-            text-align: right;
-            margin: 10px 0;
-        }
-
         .input-row {
             display: grid;
             gap: 14px;
@@ -472,21 +463,6 @@
     <script src="config.js" onerror="window.APP_CONFIG=window.APP_CONFIG||{}"></script>
     <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
-    <script>
-        // Debug: Log configuration on page load
-        document.addEventListener('DOMContentLoaded', function() {
-            const isLocalFile = window.location.protocol === 'file:';
-            const isGitHub = window.location.hostname.includes('github.io');
-            const debugMsg = `[DEBUG] Protocol: ${window.location.protocol} | Hostname: ${window.location.hostname} | Local: ${isLocalFile} | GitHub: ${isGitHub}`;
-            console.log(debugMsg);
-            if (window.APP_CONFIG) {
-                console.log('[DEBUG] APP_CONFIG loaded:', {
-                    hasGoogleTTSKey: !!window.APP_CONFIG.googleTTSApiKey,
-                    hasOAuthClientId: !!window.APP_CONFIG.googleOAuthClientId
-                });
-            }
-        });
-    </script>
 </head>
 <body>
     <div class="page">
@@ -650,6 +626,7 @@
         let conversationHistory = [];
         let currentSystemPrompt = '';
         let isAwaitingAiResponse = false;
+        let pendingCustomerMessage = null;  // Holds customer message to display when speech finishes
 
         // ─── Inline error helper ───────────────────────────────────────────────────
         let inlineErrorTimer = null;
@@ -1066,16 +1043,34 @@ STRICT RULES:
                         audio.onended = () => {
                             URL.revokeObjectURL(audioUrl);
                             if (activeGoogleTTSAudio === audio) activeGoogleTTSAudio = null;
+                            // Display pending customer message when speech finishes
+                            if (pendingCustomerMessage && pendingCustomerMessage.messageDiv.parentNode === null) {
+                                chat.appendChild(pendingCustomerMessage.messageDiv);
+                                chat.scrollTop = chat.scrollHeight;
+                                pendingCustomerMessage = null;
+                            }
                             resolve(true);
                         };
                         audio.onerror = () => {
                             URL.revokeObjectURL(audioUrl);
                             if (activeGoogleTTSAudio === audio) activeGoogleTTSAudio = null;
+                            // Display pending customer message on error too
+                            if (pendingCustomerMessage && pendingCustomerMessage.messageDiv.parentNode === null) {
+                                chat.appendChild(pendingCustomerMessage.messageDiv);
+                                chat.scrollTop = chat.scrollHeight;
+                                pendingCustomerMessage = null;
+                            }
                             resolve(false);
                         };
                         audio.play().catch(() => {
                             URL.revokeObjectURL(audioUrl);
                             if (activeGoogleTTSAudio === audio) activeGoogleTTSAudio = null;
+                            // Display pending customer message on play error
+                            if (pendingCustomerMessage && pendingCustomerMessage.messageDiv.parentNode === null) {
+                                chat.appendChild(pendingCustomerMessage.messageDiv);
+                                chat.scrollTop = chat.scrollHeight;
+                                pendingCustomerMessage = null;
+                            }
                             resolve(false);
                         });
                     });
@@ -1691,11 +1686,23 @@ STRICT RULES:
                 utterance.onend = () => {
                     if (activeCustomerUtterance === utterance) activeCustomerUtterance = null;
                     isCustomerSpeechPlaying = false;
+                    // Display pending customer message when speech finishes
+                    if (pendingCustomerMessage && pendingCustomerMessage.messageDiv.parentNode === null) {
+                        chat.appendChild(pendingCustomerMessage.messageDiv);
+                        chat.scrollTop = chat.scrollHeight;
+                        pendingCustomerMessage = null;
+                    }
                     setTimeout(tryPlayNextCustomerMessage, nextMessage.pauseAfterMs || 120);
                 };
                 utterance.onerror = () => {
                     if (activeCustomerUtterance === utterance) activeCustomerUtterance = null;
                     isCustomerSpeechPlaying = false;
+                    // Display pending customer message on error too
+                    if (pendingCustomerMessage && pendingCustomerMessage.messageDiv.parentNode === null) {
+                        chat.appendChild(pendingCustomerMessage.messageDiv);
+                        chat.scrollTop = chat.scrollHeight;
+                        pendingCustomerMessage = null;
+                    }
                     setTimeout(tryPlayNextCustomerMessage, nextMessage.pauseAfterMs || 120);
                 };
                 window.speechSynthesis.speak(utterance);
@@ -1731,11 +1738,23 @@ STRICT RULES:
                 utterance.onend = () => {
                     if (activeCustomerUtterance === utterance) activeCustomerUtterance = null;
                     isCustomerSpeechPlaying = false;
+                    // Display pending customer message when speech finishes
+                    if (pendingCustomerMessage && pendingCustomerMessage.messageDiv.parentNode === null) {
+                        chat.appendChild(pendingCustomerMessage.messageDiv);
+                        chat.scrollTop = chat.scrollHeight;
+                        pendingCustomerMessage = null;
+                    }
                     setTimeout(tryPlayNextCustomerMessage, nextMessage.pauseAfterMs || 120);
                 };
                 utterance.onerror = () => {
                     if (activeCustomerUtterance === utterance) activeCustomerUtterance = null;
                     isCustomerSpeechPlaying = false;
+                    // Display pending customer message on error too
+                    if (pendingCustomerMessage && pendingCustomerMessage.messageDiv.parentNode === null) {
+                        chat.appendChild(pendingCustomerMessage.messageDiv);
+                        chat.scrollTop = chat.scrollHeight;
+                        pendingCustomerMessage = null;
+                    }
                     setTimeout(tryPlayNextCustomerMessage, nextMessage.pauseAfterMs || 120);
                 };
                 window.speechSynthesis.speak(utterance);
@@ -3280,18 +3299,20 @@ STRICT RULES:
             messageDiv.className = 'message ' + type;
             messageDiv.textContent = text;
             
-            // Mark debug messages with data-debug attribute for styling
-            if (text && text.startsWith('[DEBUG]')) {
-                messageDiv.setAttribute('data-debug', 'true');
-            }
-            
-            chat.appendChild(messageDiv);
-            chat.scrollTop = chat.scrollHeight;
+            // If this is a customer message, hold it until speech is done
             if (conversationStarted && type === 'agent' && /^(?:לקוח(?:ה)?|Customer):/.test(text)) {
                 trackCustomerMessageMetrics(text);
                 pendingCustomerMessageTimestamp = Date.now();
+                pendingCustomerMessage = { text, type, messageDiv };  // Store for later display
                 speakCustomerMessage(text);
+                // Don't add to chat yet - will be added when speech starts/finishes
+                chat.scrollTop = chat.scrollHeight;
+            } else {
+                // For non-customer messages, display immediately
+                chat.appendChild(messageDiv);
+                chat.scrollTop = chat.scrollHeight;
             }
+            
             // Reset inactivity timer whenever a message is added
             if (conversationStarted) {
                 startInactivityTimer();
@@ -3463,12 +3484,6 @@ STRICT RULES:
             currentAgentFirstName = agentFirstName;
 
             conversationStarted = true;
-            
-            // Debug: Log conversation start details
-            const debugStartMsg = `[DEBUG] Conversation started | Environment: ${window.location.protocol === 'file:' ? 'LOCAL_FILE' : (window.location.hostname.includes('github.io') ? 'GITHUB_PAGES' : 'LOCAL_SERVER')} | API URL will be: ${window.location.protocol === 'file:' ? 'http://localhost:3000/api/chat' : '/api/chat'}`;
-            addMessage(debugStartMsg, 'system');
-            console.log(debugStartMsg);
-            
             startBtn.disabled = true;
             endBtn.disabled = false;
             setConversationSelectorsLocked(true);
@@ -3610,13 +3625,7 @@ STRICT RULES:
             isAwaitingAiResponse = true;
             showThinkingIndicator();
 
-            // Debug: Log API call details
-            const chatUrl = getChatApiUrl();
-            const debugApiMsg = `[DEBUG] Calling API: ${chatUrl}`;
-            addMessage(debugApiMsg, 'system');
-            console.log(debugApiMsg);
-
-            fetch(chatUrl, {
+            fetch(getChatApiUrl(), {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
@@ -3632,11 +3641,6 @@ STRICT RULES:
                 hideThinkingIndicator();
                 isAwaitingAiResponse = false;
                 if (!conversationStarted) return;
-
-                // Debug: Log successful response
-                const debugResponseMsg = `[DEBUG] ✓ API Response received`;
-                addMessage(debugResponseMsg, 'system');
-                console.log(debugResponseMsg, data);
 
                 const customerReply = data.reply || '';
                 conversationHistory.push({ role: 'assistant', content: customerReply });
@@ -3657,12 +3661,6 @@ STRICT RULES:
                 isAwaitingAiResponse = false;
                 // Roll back the history entry since we didn't get a response
                 conversationHistory.pop();
-                
-                // Debug: Log error details
-                const errorDebug = `[DEBUG] ✗ API Error: ${typeof err === 'string' ? err : JSON.stringify(err)}`;
-                addMessage(errorDebug, 'system');
-                console.error(errorDebug, err);
-                
                 let errMsg = typeof err === 'string' ? err : 'שגיאת תקשורת עם השרת. ודא שהשרת פעיל ונסה שוב.';
                 if (window.location.protocol === 'file:' && typeof err !== 'string') {
                     errMsg = 'העמוד פתוח כקובץ מקומי. הפעל שרת ופתח דרך http://localhost:3000.';
